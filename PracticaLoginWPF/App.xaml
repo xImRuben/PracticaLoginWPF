@@ -6,6 +6,7 @@
         <SolidColorBrush x:Key="BgDark" Color="#0F0F13"/>
         <SolidColorBrush x:Key="BgLight" Color="#1A1A24"/>
         <SolidColorBrush x:Key="BgInput" Color="#22222E"/>
+
         <SolidColorBrush x:Key="AccentColor" Color="#651FFF"/>
         <SolidColorBrush x:Key="TextPrimary" Color="#FFFFFF"/>
         <SolidColorBrush x:Key="TextSecondary" Color="#8F90A6"/>

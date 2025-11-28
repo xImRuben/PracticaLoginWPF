@@ -1,96 +1,116 @@
 ﻿using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace PracticaLoginWPF
 {
     public partial class MainWindow : Window
     {
-        // ==========================================
-        // ESTO ES LO QUE TE FALTABA (VARIABLES GLOBALES)
-        // ==========================================
-
-        // 1. La conexión a la base de datos
         ConexionDB db = new ConexionDB();
-
-        // 2. El contador de intentos fallidos
         private int intentos = 0;
 
         public MainWindow()
         {
             InitializeComponent();
+            CargarUsuario();
         }
 
-        // ==========================================
-        // MÉTODOS Y EVENTOS
-        // ==========================================
-
-        // Mover ventana al arrastrar
-        private void Window_MouseDown(object sender, MouseButtonEventArgs e)
+        private void CargarUsuario()
         {
-            if (e.LeftButton == MouseButtonState.Pressed)
+            string guardado = Properties.Settings.Default.UsuarioGuardado;
+            if (!string.IsNullOrEmpty(guardado))
             {
-                DragMove();
+                txtUsuario.Text = guardado;
+                chkRecordar.IsChecked = true;
+                txtPassword.Focus();
             }
         }
 
-        // Minimizar
-        private void BtnMinimizar_Click(object sender, RoutedEventArgs e)
-        {
-            this.WindowState = WindowState.Minimized;
-        }
-
-        // Salir (Cerrar App)
-        private void BtnSalir_Click(object sender, RoutedEventArgs e)
-        {
-            Application.Current.Shutdown();
-        }
-
-        // BOTÓN LOGIN (Lógica Principal)
+        // ==============================================================
+        // LÓGICA DE LOGIN CON VALIDACIONES ESPECÍFICAS
+        // ==============================================================
         private void BtnLogin_Click(object sender, RoutedEventArgs e)
         {
-            // Cogemos lo que ha escrito el usuario
             string u = txtUsuario.Text;
             string p = txtPassword.Password;
 
-            // 1. Seguridad: Bloqueo tras 3 intentos
+            // 1. REGLA BLOQUEO: Si ya ha fallado 3 veces antes
             if (intentos >= 3)
             {
-                lblMensaje.Text = "⛔ SISTEMA BLOQUEADO: Demasiados intentos.";
-                btnLogin.IsEnabled = false;
+                MostrarError("⛔ Se bloquea temporalmente el usuario");
+                btnLogin.IsEnabled = false; // Bloqueo visual del botón
                 return;
             }
 
-            // 2. Validación: Campos vacíos
+            // 2. REGLA VACÍOS: Login o pass en blanco
             if (string.IsNullOrWhiteSpace(u) || string.IsNullOrWhiteSpace(p))
             {
-                lblMensaje.Text = "⚠ Por favor, introduce usuario y clave.";
+                MostrarError("⚠ Introduzca datos");
                 return;
             }
 
-            // 3. Consultamos a la Base de Datos (MySQL)
+            // 3. REGLA USUARIO NO EXISTE
+            // Comprobamos si el nombre existe en la base de datos
+            if (!db.ExisteUsuario(u))
+            {
+                MostrarError("⚠ El usuario introducido no existe");
+                return;
+            }
+
+            // 4. REGLA CONTRASEÑA INCORRECTA (El usuario sí existe)
             if (db.ValidarUsuario(u, p))
             {
-                // ¡Éxito!
+                // --- LOGIN CORRECTO ---
+
+                // Guardar usuario si aplica
+                if (chkRecordar.IsChecked == true) Properties.Settings.Default.UsuarioGuardado = u;
+                else Properties.Settings.Default.UsuarioGuardado = "";
+                Properties.Settings.Default.Save();
+
+                // Abrir Home y cerrar Login
                 HomeWindow home = new HomeWindow();
                 home.Show();
                 this.Close();
             }
             else
             {
-                // Fallo
+                // --- CONTRASEÑA MAL ---
                 intentos++;
-                lblMensaje.Text = $"⚠ Credenciales inválidas ({intentos}/3)";
-                txtPassword.Clear();
-                txtPassword.Focus();
+
+                if (intentos >= 3)
+                {
+                    MostrarError("⛔ Se bloquea temporalmente el usuario");
+                    btnLogin.IsEnabled = false;
+                }
+                else
+                {
+                    MostrarError($"⚠ La contraseña no es correcta ({intentos}/3)");
+                    txtPassword.Clear();
+                    txtPassword.Focus();
+                }
             }
         }
 
-        // BOTÓN IR AL REGISTRO
+        // Método auxiliar para limpiar el código
+        private void MostrarError(string mensaje)
+        {
+            lblMensaje.Text = mensaje;
+            lblMensaje.Foreground = new SolidColorBrush(Color.FromRgb(255, 82, 82)); // Rojo
+        }
+
         private void BtnIrRegistro_Click(object sender, RoutedEventArgs e)
         {
             RegisterWindow reg = new RegisterWindow();
             reg.Show();
             this.Close();
         }
+
+        private void Window_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed) DragMove();
+        }
+
+        private void BtnMinimizar_Click(object sender, RoutedEventArgs e) => this.WindowState = WindowState.Minimized;
+        private void BtnSalir_Click(object sender, RoutedEventArgs e) => Application.Current.Shutdown();
     }
 }
