@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Assets\forza.jpg" />
+    <None Remove="Assets\halo.jpg" />
+    <None Remove="Assets\logo.ico" />
+    <None Remove="Assets\starfield.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MySql.Data" Version="9.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\forza.jpg" />
+    <Resource Include="Assets\gears.jpg" />
+    <Resource Include="Assets\halo.jpg" />
+    <Resource Include="Assets\logo.ico" />
+    <Resource Include="Assets\starfield.jpg" />
+  </ItemGroup>
+
+</Project>

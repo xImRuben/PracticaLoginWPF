@@ -1,0 +1,76 @@
+﻿<Window x:Class="PracticaLoginWPF.AdminWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Admin Panel" Height="500" Width="800"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        MouseDown="Window_MouseDown" Icon="/Assets/logo.ico">
+
+    <Border Background="{StaticResource BgDark}" CornerRadius="15" BorderBrush="#FF5252" BorderThickness="1">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="20" Color="#FF5252" ShadowDepth="0" Opacity="0.3"/>
+        </Border.Effect>
+
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="60"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="50"/>
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="ADMINISTRACIÓN" Foreground="#FF5252" FontSize="24" FontWeight="Black"/>
+                <TextBlock Text=" // BASE DE DATOS" Foreground="#666" FontSize="14" VerticalAlignment="Bottom" Margin="10,0,0,4"/>
+            </StackPanel>
+
+            <Button Grid.Row="0" Content="✕" HorizontalAlignment="Right" Click="BtnCerrar_Click"
+                    Foreground="White" Background="Transparent" BorderThickness="0" FontSize="18" Cursor="Hand"/>
+
+            <DataGrid x:Name="GridUsuarios" Grid.Row="1" Margin="0,20"
+                      AutoGenerateColumns="False" HeadersVisibility="Column"
+                      Background="Transparent" RowBackground="#1A1A24" AlternatingRowBackground="#22222E"
+                      Foreground="White" BorderThickness="0" GridLinesVisibility="None" IsReadOnly="True">
+
+                <DataGrid.Resources>
+                    <Style TargetType="DataGridColumnHeader">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="Foreground" Value="#FF5252"/>
+                        <Setter Property="FontWeight" Value="Bold"/>
+                        <Setter Property="Padding" Value="10"/>
+                        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                    </Style>
+                    <Style TargetType="DataGridCell">
+                        <Setter Property="Padding" Value="10"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="DataGridCell">
+                                    <Border Padding="{TemplateBinding Padding}" Background="Transparent">
+                                        <ContentPresenter/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </DataGrid.Resources>
+
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
+                    <DataGridTextColumn Header="AGENTE" Binding="{Binding Nombre}" Width="*"/>
+                    <DataGridTextColumn Header="CREDENCIAL" Binding="{Binding Password}" Width="*"/>
+                    <DataGridTextColumn Header="REGISTRO" Binding="{Binding FechaRegistro}" Width="150"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="ACTUALIZAR DATOS" Click="BtnActualizar_Click" Height="35" Width="150"
+                        Background="#FF5252" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand">
+                    <Button.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="6"/>
+                        </Style>
+                    </Button.Resources>
+                </Button>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>
