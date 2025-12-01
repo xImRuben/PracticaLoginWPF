@@ -25,11 +25,9 @@ namespace PracticaLoginWPF
                 try
                 {
                     conn.Open();
-                    // BINARY para distinguir mayúsculas de minúsculas
                     string query = "SELECT COUNT(*) FROM usuarios WHERE BINARY nombre = @u";
                     MySqlCommand cmd = new MySqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@u", usuario);
-
                     return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
                 }
                 catch { return false; }
