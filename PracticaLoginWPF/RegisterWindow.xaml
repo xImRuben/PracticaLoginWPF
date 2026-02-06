@@ -1,0 +1,49 @@
+﻿<Window x:Class="PracticaLoginWPF.RegisterWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Registro Nexus" Height="500" Width="400"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        MouseDown="Window_MouseDown">
+
+    <Border CornerRadius="15" Background="{StaticResource BgDark}" BorderBrush="#2A2A35" BorderThickness="1">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="20" Color="#651FFF" ShadowDepth="0" Opacity="0.2"/>
+        </Border.Effect>
+
+        <Grid Margin="30">
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Text="NUEVO AGENTE" Foreground="White" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,30"/>
+
+                <TextBlock Text="USUARIO" Foreground="{StaticResource TextSecondary}" FontSize="10" FontWeight="Bold" Margin="2,0,0,5"/>
+                <TextBox x:Name="txtRegUser" Height="45" Style="{StaticResource NexusInputStyle}" Margin="0,0,0,15"/>
+
+                <TextBlock Text="CONTRASEÑA" Foreground="{StaticResource TextSecondary}" FontSize="10" FontWeight="Bold" Margin="2,0,0,5"/>
+                <PasswordBox x:Name="txtRegPass" Height="45" Style="{StaticResource NexusInputStyle}" Margin="0,0,0,15"/>
+
+                <TextBlock Text="CONFIRMAR CONTRASEÑA" Foreground="{StaticResource TextSecondary}" FontSize="10" FontWeight="Bold" Margin="2,0,0,5"/>
+                <PasswordBox x:Name="txtRegPassConfirm" Height="45" Style="{StaticResource NexusInputStyle}" Margin="0,0,0,25"/>
+
+                <Button Content="CREAR CUENTA" Height="50" Click="BtnRegistrar_Click"
+                        Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand">
+                    <Button.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="#00E676" Offset="0"/>
+                            <GradientStop Color="#00C853" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Button.Background>
+                    <Button.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="8"/>
+                        </Style>
+                    </Button.Resources>
+                </Button>
+
+                <Button Content="Cancelar" Click="BtnCancelar_Click" Margin="0,15,0,0"
+                        Foreground="{StaticResource TextSecondary}" Background="Transparent" BorderThickness="0" Cursor="Hand"/>
+
+                <TextBlock x:Name="lblError" Foreground="#FF5252" HorizontalAlignment="Center" Margin="0,15,0,0" TextWrapping="Wrap"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

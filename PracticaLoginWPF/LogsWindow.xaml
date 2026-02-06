@@ -1,0 +1,94 @@
+﻿<Window x:Class="PracticaLoginWPF.LogsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Historial Detallado" Height="450" Width="700"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        MouseDown="Window_MouseDown">
+
+    <Border Background="{StaticResource BgDark}" CornerRadius="10" BorderBrush="#666" BorderThickness="1">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="20" Opacity="0.5"/>
+        </Border.Effect>
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Text="📋 AUDITORÍA DETALLADA" Foreground="White" FontSize="18" FontWeight="Bold" Margin="0,0,0,15"/>
+
+            <DataGrid x:Name="GridLogs" Grid.Row="1" AutoGenerateColumns="False" 
+                      Background="Transparent" RowBackground="#1A1A24" AlternatingRowBackground="#22222E"
+                      Foreground="White" BorderThickness="0" GridLinesVisibility="Horizontal" 
+                      HeadersVisibility="Column" IsReadOnly="True" HorizontalGridLinesBrush="#333">
+                <DataGrid.Resources>
+                    <Style TargetType="DataGridColumnHeader">
+                        <Setter Property="Background" Value="#222"/>
+                        <Setter Property="Foreground" Value="#AAA"/>
+                        <Setter Property="Padding" Value="10"/>
+                        <Setter Property="FontWeight" Value="Bold"/>
+                    </Style>
+                    <Style TargetType="DataGridCell">
+                        <Setter Property="Padding" Value="5"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="DataGridCell">
+                                    <Border Padding="{TemplateBinding Padding}" Background="Transparent">
+                                        <ContentPresenter VerticalAlignment="Center"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </DataGrid.Resources>
+
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="FECHA" Binding="{Binding fecha}" Width="140"/>
+                    <DataGridTextColumn Header="ADMIN" Binding="{Binding admin_responsable}" Width="100">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="#FF5252"/>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="ACCIÓN" Binding="{Binding accion}" Width="100"/>
+                    <DataGridTextColumn Header="USUARIO AFECTADO" Binding="{Binding usuario_afectado}" Width="*">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="#69F0AE"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <Grid Grid.Row="2" Margin="0,15,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="0" Content="💾 EXPORTAR A EXCEL (CSV)" Click="BtnExportar_Click" Height="35" 
+                        Background="#1B5E20" Foreground="White" Margin="0,0,5,0" Cursor="Hand" FontWeight="Bold">
+                    <Button.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="5"/>
+                        </Style>
+                    </Button.Resources>
+                </Button>
+
+                <Button Grid.Column="1" Content="CERRAR INFORME" Click="BtnCerrar_Click" Height="35" 
+                        Background="#333" Foreground="White" Margin="5,0,0,0" Cursor="Hand">
+                    <Button.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="5"/>
+                        </Style>
+                    </Button.Resources>
+                </Button>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>
