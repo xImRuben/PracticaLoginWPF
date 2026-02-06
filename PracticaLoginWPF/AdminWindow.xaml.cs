@@ -12,18 +12,14 @@ namespace PracticaLoginWPF
     public partial class AdminWindow : Window
     {
         ConexionDB db = new ConexionDB();
+        byte[] caratulaActualBytes = null;
 
         public AdminWindow()
         {
             InitializeComponent();
             CargarUsuarios();
+            CargarJuegos();
             ActualizarStats();
-        }
-
-        private void CargarUsuarios()
-        {
-            List<Usuario> usuarios = db.ObtenerUsuarios(txtBuscar.Text);
-            ListaUsuarios.ItemsSource = usuarios;
         }
 
         private void ActualizarStats()
@@ -32,6 +28,34 @@ namespace PracticaLoginWPF
             lblTotal.Text = datos[0].ToString();
             lblActivos.Text = datos[1].ToString();
             lblBaneados.Text = datos[2].ToString();
+        }
+
+        // =======================================================
+        // NAVEGACIÓN
+        // =======================================================
+        private void Nav_Click(object sender, RoutedEventArgs e)
+        {
+            RadioButton rb = sender as RadioButton;
+            string tag = rb.Tag.ToString();
+
+            if (tag == "Users")
+            {
+                ViewUsers.Visibility = Visibility.Visible;
+                ViewGames.Visibility = Visibility.Collapsed;
+            }
+            else if (tag == "Games")
+            {
+                ViewUsers.Visibility = Visibility.Collapsed;
+                ViewGames.Visibility = Visibility.Visible;
+            }
+        }
+
+        // =======================================================
+        // GESTIÓN DE USUARIOS
+        // =======================================================
+        private void CargarUsuarios()
+        {
+            ListaUsuarios.ItemsSource = db.ObtenerUsuarios(txtBuscar.Text);
         }
 
         private void ListaUsuarios_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -43,70 +67,40 @@ namespace PracticaLoginWPF
                 txtNombre.Text = u.Nombre;
                 txtPass.Text = u.Password;
                 txtEmail.Text = u.Email;
-
-                foreach (ComboBoxItem item in cmbRol.Items)
-                    if (item.Content.ToString() == u.Rol) cmbRol.SelectedItem = item;
-
-                foreach (ComboBoxItem item in cmbEstado.Items)
-                    if (item.Content.ToString() == u.Estado) cmbEstado.SelectedItem = item;
-
+                foreach (ComboBoxItem item in cmbRol.Items) if (item.Content.ToString() == u.Rol) cmbRol.SelectedItem = item;
+                foreach (ComboBoxItem item in cmbEstado.Items) if (item.Content.ToString() == u.Estado) cmbEstado.SelectedItem = item;
                 txtMotivo.Text = (u.Estado == "baneado") ? db.ObtenerMotivoBan(u.Nombre) : "";
-
-                if (u.AvatarImage != null) imgAvatarPreview.Source = u.AvatarImage;
-                else imgAvatarPreview.Source = new BitmapImage(new Uri("pack://application:,,,/Assets/logo.ico"));
+                imgAvatarPreview.Source = u.AvatarImage ?? new BitmapImage(new Uri("pack://application:,,,/Assets/logo.ico"));
             }
         }
 
         private void BtnSubirFoto_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrEmpty(txtId.Text)) { MessageBox.Show("Selecciona un usuario."); return; }
-            OpenFileDialog op = new OpenFileDialog();
-            op.Title = "Selecciona imagen";
-            op.Filter = "Imágenes|*.jpg;*.jpeg;*.png";
-
+            if (string.IsNullOrEmpty(txtId.Text)) return;
+            OpenFileDialog op = new OpenFileDialog { Filter = "Imágenes|*.jpg;*.png" };
             if (op.ShowDialog() == true)
             {
-                try
+                byte[] img = File.ReadAllBytes(op.FileName);
+                if (db.ActualizarAvatar(int.Parse(txtId.Text), img))
                 {
-                    byte[] imageBytes = File.ReadAllBytes(op.FileName);
-                    int id = int.Parse(txtId.Text);
-                    if (db.ActualizarAvatar(id, imageBytes))
-                    {
-                        CargarUsuarios();
-                        BitmapImage bi = new BitmapImage(); bi.BeginInit(); bi.StreamSource = new MemoryStream(imageBytes); bi.EndInit();
-                        imgAvatarPreview.Source = bi;
-
-                        // Log
-                        db.RegistrarLog(Sesion.UsuarioActual.Nombre, "Subir Foto", txtNombre.Text);
-                        MessageBox.Show("Foto actualizada.");
-                    }
+                    CargarUsuarios();
+                    imgAvatarPreview.Source = new BitmapImage(new Uri(op.FileName));
                 }
-                catch { MessageBox.Show("Error al subir imagen."); }
             }
         }
 
         private void BtnBorrarFoto_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrEmpty(txtId.Text)) return;
-            if (MessageBox.Show("¿Borrar foto?", "Confirmar", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+            if (!string.IsNullOrEmpty(txtId.Text) && db.EliminarAvatar(int.Parse(txtId.Text)))
             {
-                if (db.EliminarAvatar(int.Parse(txtId.Text)))
-                {
-                    CargarUsuarios();
-                    imgAvatarPreview.Source = new BitmapImage(new Uri("pack://application:,,,/Assets/logo.ico"));
-
-                    // Log
-                    db.RegistrarLog(Sesion.UsuarioActual.Nombre, "Borrar Foto", txtNombre.Text);
-                    MessageBox.Show("Foto eliminada.");
-                }
+                CargarUsuarios();
+                imgAvatarPreview.Source = new BitmapImage(new Uri("pack://application:,,,/Assets/logo.ico"));
             }
         }
 
-        private void TxtBuscar_TextChanged(object sender, TextChangedEventArgs e) { CargarUsuarios(); }
-
         private void BtnGuardar_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrEmpty(txtId.Text)) { MessageBox.Show("Selecciona un usuario."); return; }
+            if (string.IsNullOrEmpty(txtId.Text)) return;
             Usuario u = new Usuario
             {
                 Id = int.Parse(txtId.Text),
@@ -116,58 +110,127 @@ namespace PracticaLoginWPF
                 Rol = (cmbRol.SelectedItem as ComboBoxItem).Content.ToString(),
                 Estado = (cmbEstado.SelectedItem as ComboBoxItem).Content.ToString()
             };
-            if (db.EditarUsuario(u))
-            {
-                db.RegistrarLog(Sesion.UsuarioActual.Nombre, "Editar Usuario", u.Nombre);
-                MessageBox.Show("Guardado.");
-                CargarUsuarios();
-                ActualizarStats();
-            }
+            if (db.EditarUsuario(u)) { CargarUsuarios(); ActualizarStats(); MessageBox.Show("Guardado."); }
         }
 
         private void BtnLimpiar_Click(object sender, RoutedEventArgs e)
         {
             txtId.Text = ""; txtNombre.Text = ""; txtPass.Text = ""; txtEmail.Text = ""; txtMotivo.Text = "";
-            cmbRol.SelectedIndex = -1; cmbEstado.SelectedIndex = -1; ListaUsuarios.SelectedIndex = -1;
-            imgAvatarPreview.Source = new BitmapImage(new Uri("pack://application:,,,/Assets/logo.ico"));
+            ListaUsuarios.SelectedIndex = -1;
         }
 
-        private void BtnBanear_Click(object sender, RoutedEventArgs e)
+        private void BtnBanear_Click(object sender, RoutedEventArgs e) { if (!string.IsNullOrEmpty(txtId.Text)) { db.BanearUsuario(int.Parse(txtId.Text), true, txtMotivo.Text); CargarUsuarios(); ActualizarStats(); } }
+        private void BtnActivar_Click(object sender, RoutedEventArgs e) { if (!string.IsNullOrEmpty(txtId.Text)) { db.BanearUsuario(int.Parse(txtId.Text), false); CargarUsuarios(); ActualizarStats(); } }
+        private void BtnEliminar_Click(object sender, RoutedEventArgs e) { if (!string.IsNullOrEmpty(txtId.Text)) { db.EliminarUsuario(int.Parse(txtId.Text)); CargarUsuarios(); ActualizarStats(); BtnLimpiar_Click(null, null); } }
+        private void TxtBuscar_TextChanged(object sender, TextChangedEventArgs e) { CargarUsuarios(); }
+
+        // =======================================================
+        // GESTIÓN DE JUEGOS
+        // =======================================================
+        private void CargarJuegos()
         {
-            if (string.IsNullOrEmpty(txtId.Text) || string.IsNullOrEmpty(txtMotivo.Text)) { MessageBox.Show("Faltan datos."); return; }
-            if (db.BanearUsuario(int.Parse(txtId.Text), true, txtMotivo.Text))
+            ListaJuegosAdmin.ItemsSource = db.ObtenerJuegos(true);
+        }
+
+        private void ListaJuegos_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var j = ListaJuegosAdmin.SelectedItem as Juego;
+            if (j != null)
             {
-                db.RegistrarLog(Sesion.UsuarioActual.Nombre, "BANEAR", txtNombre.Text);
-                CargarUsuarios();
-                ActualizarStats();
+                txtIdJuego.Text = j.Id.ToString();
+                txtTituloJuego.Text = j.Titulo;
+
+                // SELECCIÓN DEL GÉNERO EN EL COMBOBOX
+                foreach (ComboBoxItem item in cmbGeneroJuego.Items)
+                    if (item.Content.ToString() == j.Genero) cmbGeneroJuego.SelectedItem = item;
+
+                txtPrecioJuego.Text = j.Precio.ToString();
+                txtDescJuego.Text = j.Descripcion;
+                chkVisible.IsChecked = j.Visible;
+
+                if (j.CaratulaImagen != null) imgCaratula.Source = j.CaratulaImagen;
+                else imgCaratula.Source = new BitmapImage(new Uri("pack://application:,,,/Assets/logo.ico"));
+
+                caratulaActualBytes = j.Caratula;
             }
         }
 
-        private void BtnActivar_Click(object sender, RoutedEventArgs e)
+        private void BtnSubirCaratula_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrEmpty(txtId.Text)) return;
-            if (db.BanearUsuario(int.Parse(txtId.Text), false))
+            OpenFileDialog op = new OpenFileDialog { Filter = "Imágenes|*.jpg;*.png;*.jpeg" };
+            if (op.ShowDialog() == true)
             {
-                db.RegistrarLog(Sesion.UsuarioActual.Nombre, "REACTIVAR", txtNombre.Text);
-                CargarUsuarios();
-                ActualizarStats();
+                caratulaActualBytes = File.ReadAllBytes(op.FileName);
+                BitmapImage bi = new BitmapImage(); bi.BeginInit(); bi.StreamSource = new MemoryStream(caratulaActualBytes); bi.EndInit();
+                imgCaratula.Source = bi;
             }
         }
 
-        private void BtnEliminar_Click(object sender, RoutedEventArgs e)
+        private void BtnGuardarJuego_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrEmpty(txtId.Text)) return;
-            if (MessageBox.Show("¿Eliminar usuario?", "PELIGRO", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
-                if (db.EliminarUsuario(int.Parse(txtId.Text)))
+            try
+            {
+                // GUARDADO DEL GÉNERO DESDE COMBOBOX
+                string generoSeleccionado = (cmbGeneroJuego.SelectedItem as ComboBoxItem)?.Content.ToString();
+
+                Juego j = new Juego
                 {
-                    db.RegistrarLog(Sesion.UsuarioActual.Nombre, "ELIMINAR USUARIO", txtNombre.Text);
-                    BtnLimpiar_Click(null, null);
-                    CargarUsuarios();
-                    ActualizarStats();
+                    Titulo = txtTituloJuego.Text,
+                    Genero = generoSeleccionado,
+                    Precio = decimal.Parse(txtPrecioJuego.Text),
+                    Descripcion = txtDescJuego.Text,
+                    Visible = chkVisible.IsChecked == true,
+                    Caratula = caratulaActualBytes
+                };
+
+                if (string.IsNullOrEmpty(txtIdJuego.Text))
+                {
+                    if (db.AgregarJuego(j))
+                    {
+                        db.RegistrarLog(Sesion.UsuarioActual.Nombre, "CREAR JUEGO", j.Titulo);
+                        MessageBox.Show("Juego creado.");
+                        CargarJuegos();
+                        BtnLimpiarJuego_Click(null, null);
+                    }
                 }
+                else
+                {
+                    j.Id = int.Parse(txtIdJuego.Text);
+                    if (db.ModificarJuego(j))
+                    {
+                        db.RegistrarLog(Sesion.UsuarioActual.Nombre, "EDITAR JUEGO", j.Titulo);
+                        MessageBox.Show("Juego actualizado.");
+                        CargarJuegos();
+                    }
+                }
+            }
+            catch (Exception ex) { MessageBox.Show("Error en los datos: " + ex.Message); }
         }
 
-        // --- BOTONES NUEVOS DE GESTIÓN ---
+        private void BtnEliminarJuego_Click(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(txtIdJuego.Text))
+            {
+                if (MessageBox.Show("¿Eliminar juego?", "Confirmar", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                {
+                    db.EliminarJuego(int.Parse(txtIdJuego.Text));
+                    db.RegistrarLog(Sesion.UsuarioActual.Nombre, "ELIMINAR JUEGO", txtTituloJuego.Text);
+                    CargarJuegos();
+                    BtnLimpiarJuego_Click(null, null);
+                }
+            }
+        }
+
+        private void BtnLimpiarJuego_Click(object sender, RoutedEventArgs e)
+        {
+            txtIdJuego.Text = ""; txtTituloJuego.Text = "";
+            cmbGeneroJuego.SelectedIndex = -1; // Resetear combo
+            txtPrecioJuego.Text = ""; txtDescJuego.Text = "";
+            imgCaratula.Source = new BitmapImage(new Uri("pack://application:,,,/Assets/logo.ico"));
+            caratulaActualBytes = null;
+            ListaJuegosAdmin.SelectedIndex = -1;
+        }
+
         private void BtnHistorial_Click(object sender, RoutedEventArgs e)
         {
             LogsWindow logs = new LogsWindow();
@@ -178,17 +241,11 @@ namespace PracticaLoginWPF
         {
             GestionApelacionesWindow gest = new GestionApelacionesWindow();
             gest.ShowDialog();
-
-            // Al volver, recargamos la lista por si se desbloqueó a alguien
             CargarUsuarios();
             ActualizarStats();
         }
 
-        private void BtnCerrar_Click(object sender, RoutedEventArgs e)
-        {
-            this.Close();
-        }
-
+        private void BtnCerrar_Click(object sender, RoutedEventArgs e) => this.Close();
         private void Window_MouseDown(object sender, MouseButtonEventArgs e) { if (e.LeftButton == MouseButtonState.Pressed) DragMove(); }
     }
 }

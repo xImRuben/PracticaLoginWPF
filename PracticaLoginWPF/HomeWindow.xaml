@@ -7,6 +7,89 @@
         ResizeMode="CanResize" MouseDown="Window_MouseDown"
         Icon="/Assets/logo.ico">
 
+    <Window.Resources>
+        <SolidColorBrush x:Key="BgDark" Color="#121212"/>
+        <SolidColorBrush x:Key="AccentColor" Color="#651FFF"/>
+        <SolidColorBrush x:Key="TextSecondary" Color="#888"/>
+
+        <Style x:Key="NexusInputStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="#25252E"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#444"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
+                            <ScrollViewer x:Name="PART_ContentHost"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <ControlTemplate x:Key="ComboBoxToggleButton" TargetType="ToggleButton">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="20" />
+                </Grid.ColumnDefinitions>
+                <Border x:Name="Border" Grid.ColumnSpan="2" CornerRadius="5" Background="#25252E" BorderBrush="#444" BorderThickness="1" />
+                <Path x:Name="Arrow" Grid.Column="1" Fill="White" HorizontalAlignment="Center" VerticalAlignment="Center" Data="M0,0 L10,0 L5,6 z" />
+            </Grid>
+        </ControlTemplate>
+
+        <Style x:Key="NexusComboStyle" TargetType="{x:Type ComboBox}">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="ItemContainerStyle">
+                <Setter.Value>
+                    <Style TargetType="ComboBoxItem">
+                        <Setter Property="Background" Value="#25252E"/>
+                        <Setter Property="Foreground" Value="White"/>
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ComboBoxItem">
+                                    <Border x:Name="bd" Background="{TemplateBinding Background}" Padding="10,5">
+                                        <ContentPresenter />
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bd" Property="Background" Value="{StaticResource AccentColor}"/>
+                                        </Trigger>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter TargetName="bd" Property="Background" Value="#444"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ComboBox}">
+                        <Grid>
+                            <ToggleButton Name="ToggleButton" Template="{StaticResource ComboBoxToggleButton}" Grid.Column="2" Focusable="false" IsChecked="{Binding Path=IsDropDownOpen,Mode=TwoWay,RelativeSource={RelativeSource TemplatedParent}}" ClickMode="Press"/>
+                            <ContentPresenter Name="ContentSite" IsHitTestVisible="False" Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}" Margin="10,3,23,3" VerticalAlignment="Center" HorizontalAlignment="Left" />
+                            <Popup Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
+                                <Grid Name="DropDown" SnapsToDevicePixels="True" MinWidth="{TemplateBinding ActualWidth}" MaxHeight="{TemplateBinding MaxDropDownHeight}">
+                                    <Border x:Name="DropDownBorder" Background="#25252E" BorderThickness="1" BorderBrush="#444"/>
+                                    <ScrollViewer Margin="4,6,4,6" SnapsToDevicePixels="True">
+                                        <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained" />
+                                    </ScrollViewer>
+                                </Grid>
+                            </Popup>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
     <Viewbox Stretch="Fill">
 
         <Border Width="1200" Height="750" Background="{StaticResource BgDark}" CornerRadius="15" BorderBrush="#2A2A35" BorderThickness="1">
@@ -29,9 +112,18 @@
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
-                        <RadioButton x:Name="radLib" Content="Biblioteca" Click="Nav_Click" Tag="Lib" Foreground="White" FontSize="14" IsChecked="True" Margin="20,0" Background="Transparent" BorderThickness="0" Cursor="Hand"/>
-                        <RadioButton x:Name="radStore" Content="Tienda" Click="Nav_Click" Tag="Store" Foreground="{StaticResource TextSecondary}" FontSize="14" Margin="20,0" Background="Transparent" BorderThickness="0" Cursor="Hand"/>
-                        <RadioButton x:Name="radComm" Content="Comunidad" Click="Nav_Click" Tag="Comm" Foreground="{StaticResource TextSecondary}" FontSize="14" Margin="20,0" Background="Transparent" BorderThickness="0" Cursor="Hand"/>
+                        <RadioButton x:Name="radLib" Content="Catálogo" Click="Nav_Click" Tag="Lib" Foreground="White" FontSize="14" IsChecked="True" Margin="15,0" Background="Transparent" BorderThickness="0" Cursor="Hand"/>
+                        <RadioButton x:Name="radStore" Content="Mi Biblioteca" Click="Nav_Click" Tag="MyGames" Foreground="{StaticResource TextSecondary}" FontSize="14" Margin="15,0" Background="Transparent" BorderThickness="0" Cursor="Hand"/>
+                        <RadioButton x:Name="radComm" Content="Comunidad" Click="Nav_Click" Tag="Comm" Foreground="{StaticResource TextSecondary}" FontSize="14" Margin="15,0" Background="Transparent" BorderThickness="0" Cursor="Hand"/>
+
+                        <RadioButton x:Name="radCart" Click="Nav_Click" Tag="Cart" Foreground="#651FFF" FontSize="14" Margin="15,0" Background="Transparent" BorderThickness="0" Cursor="Hand" FontWeight="Bold">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🛒 Carrito" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="txtCountCarrito" Text="(0)" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </RadioButton>
+
+                        <RadioButton x:Name="radProfile" Content="👤 Mi Perfil" Click="Nav_Click" Tag="Profile" Foreground="{StaticResource TextSecondary}" FontSize="14" Margin="30,0,0,0" Background="Transparent" BorderThickness="0" Cursor="Hand"/>
 
                         <Button x:Name="BtnAdmin" Content="ADMIN" Click="BtnAdmin_Click" 
                                 Foreground="#FF5252" FontWeight="Bold" Background="Transparent" 
@@ -56,91 +148,246 @@
 
                 <Grid Grid.Row="1">
 
-                    <ScrollViewer x:Name="GridLibrary" VerticalScrollBarVisibility="Hidden" Visibility="Visible">
-                        <StackPanel Margin="30,10,30,30">
-                            <Border Height="380" CornerRadius="12" Margin="0,0,0,40" Cursor="Hand" MouseLeftButtonDown="Juego_Click" Tag="Gears">
-                                <Border.Background>
-                                    <ImageBrush ImageSource="/Assets/gears.jpg" Stretch="UniformToFill" Opacity="0.9"/>
-                                </Border.Background>
-                                <Grid>
-                                    <Border CornerRadius="12">
-                                        <Border.Background>
-                                            <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
-                                                <GradientStop Color="Transparent" Offset="0"/>
-                                                <GradientStop Color="#0F0F13" Offset="1"/>
-                                            </LinearGradientBrush>
-                                        </Border.Background>
-                                    </Border>
-                                    <StackPanel VerticalAlignment="Bottom" Margin="40">
-                                        <Border Background="{StaticResource AccentColor}" HorizontalAlignment="Left" CornerRadius="4" Padding="8,4" Margin="0,0,0,15">
-                                            <TextBlock Text="DESTACADO" Foreground="White" FontSize="10" FontWeight="Bold"/>
-                                        </Border>
-                                        <TextBlock Text="GEARS 5" Foreground="White" FontSize="50" FontWeight="Black"/>
-                                        <Button Content="VER DETALLES" IsHitTestVisible="False" Width="180" Height="45" Background="White" Foreground="Black" FontWeight="Bold" BorderThickness="0" Margin="0,15,0,0"/>
-                                    </StackPanel>
+                    <Grid x:Name="GridCart" Visibility="Collapsed" Margin="30">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="2*"/>
+                            <ColumnDefinition Width="20"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Background="#15151A" CornerRadius="10" Padding="20">
+                            <StackPanel>
+                                <TextBlock Text="TU CESTA" Foreground="White" FontSize="18" FontWeight="Bold" Margin="0,0,0,20"/>
+                                <ScrollViewer VerticalScrollBarVisibility="Hidden" Height="500">
+                                    <ListBox x:Name="ListaCarrito" Background="Transparent" BorderThickness="0">
+                                        <ListBox.ItemContainerStyle>
+                                            <Style TargetType="ListBoxItem">
+                                                <Setter Property="Margin" Value="0,0,0,10"/>
+                                                <Setter Property="Focusable" Value="False"/>
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="ListBoxItem">
+                                                            <ContentPresenter/>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </ListBox.ItemContainerStyle>
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Background="#1E1E24" CornerRadius="8" Padding="10">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="80"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <Border CornerRadius="5" ClipToBounds="True" Height="60" Width="80">
+                                                            <Image Source="{Binding CaratulaImagen, TargetNullValue=/Assets/logo.ico}" Stretch="UniformToFill"/>
+                                                        </Border>
+                                                        <StackPanel Grid.Column="1" Margin="15,0,0,0" VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding Titulo}" Foreground="White" FontWeight="Bold" FontSize="16"/>
+                                                            <TextBlock Text="{Binding Genero}" Foreground="#888" FontSize="12"/>
+                                                        </StackPanel>
+                                                        <TextBlock Grid.Column="2" Text="{Binding PrecioFormato}" Foreground="#00E676" FontWeight="Bold" FontSize="16" VerticalAlignment="Center" Margin="0,0,20,0"/>
+                                                        <Button Grid.Column="3" Content="🗑" Click="BtnEliminarCarrito_Click" Tag="{Binding}" 
+                                                                Background="Transparent" BorderThickness="0" Foreground="#FF5252" FontSize="16" Cursor="Hand" VerticalAlignment="Center"/>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                </ScrollViewer>
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Column="2" Background="#1E1E24" CornerRadius="10" Padding="25" VerticalAlignment="Top">
+                            <StackPanel>
+                                <TextBlock Text="RESUMEN" Foreground="#888" FontWeight="Bold" Margin="0,0,0,20"/>
+                                <Grid Margin="0,0,0,10">
+                                    <TextBlock Text="Subtotal" Foreground="White"/>
+                                    <TextBlock x:Name="txtSubtotal" Text="0,00€" Foreground="White" HorizontalAlignment="Right"/>
                                 </Grid>
-                            </Border>
-
-                            <TextBlock Text="BIBLIOTECA LOCAL" Foreground="White" FontSize="16" FontWeight="Bold" Margin="0,0,0,20"/>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="20"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="20"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-
-                                <Border Grid.Column="0" Height="250" CornerRadius="10" Cursor="Hand" MouseLeftButtonDown="Juego_Click" Tag="Halo">
-                                    <Border.Background>
-                                        <ImageBrush ImageSource="/Assets/halo.jpg" Stretch="UniformToFill"/>
-                                    </Border.Background>
-                                    <Grid>
-                                        <Border VerticalAlignment="Bottom" Height="80" CornerRadius="0,0,10,10" Background="#CC000000"/>
-                                        <StackPanel VerticalAlignment="Bottom" Margin="15">
-                                            <TextBlock Text="Halo Infinite" Foreground="White" FontWeight="Bold" FontSize="16"/>
-                                        </StackPanel>
-                                    </Grid>
-                                </Border>
-                                <Border Grid.Column="2" Height="250" CornerRadius="10" Cursor="Hand" MouseLeftButtonDown="Juego_Click" Tag="Forza">
-                                    <Border.Background>
-                                        <ImageBrush ImageSource="/Assets/forza.jpg" Stretch="UniformToFill"/>
-                                    </Border.Background>
-                                    <Grid>
-                                        <Border VerticalAlignment="Bottom" Height="80" CornerRadius="0,0,10,10" Background="#CC000000"/>
-                                        <StackPanel VerticalAlignment="Bottom" Margin="15">
-                                            <TextBlock Text="Forza Horizon 5" Foreground="White" FontWeight="Bold" FontSize="16"/>
-                                        </StackPanel>
-                                    </Grid>
-                                </Border>
-                                <Border Grid.Column="4" Height="250" CornerRadius="10" Cursor="Hand" MouseLeftButtonDown="Juego_Click" Tag="Starfield">
-                                    <Border.Background>
-                                        <ImageBrush ImageSource="/Assets/starfield.jpg" Stretch="UniformToFill"/>
-                                    </Border.Background>
-                                    <Grid>
-                                        <Border VerticalAlignment="Bottom" Height="80" CornerRadius="0,0,10,10" Background="#CC000000"/>
-                                        <StackPanel VerticalAlignment="Bottom" Margin="15">
-                                            <TextBlock Text="Starfield" Foreground="White" FontWeight="Bold" FontSize="16"/>
-                                        </StackPanel>
-                                    </Grid>
-                                </Border>
-                            </Grid>
-                            <Border Height="50"/>
-                        </StackPanel>
-                    </ScrollViewer>
-
-                    <Grid x:Name="GridStore" Visibility="Collapsed" Background="Transparent">
-                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                            <TextBlock Text="TIENDA NEXUS" Foreground="{StaticResource AccentColor}" FontSize="40" FontWeight="Bold" HorizontalAlignment="Center"/>
-                            <TextBlock Text="Próximamente: Ofertas de Verano" Foreground="#888" FontSize="20" HorizontalAlignment="Center" Margin="0,10"/>
-                        </StackPanel>
+                                <Grid Margin="0,0,0,20">
+                                    <TextBlock Text="Impuestos (IVA 21%)" Foreground="White"/>
+                                    <TextBlock x:Name="txtImpuestos" Text="0,00€" Foreground="White" HorizontalAlignment="Right"/>
+                                </Grid>
+                                <Separator Background="#333" Margin="0,0,0,20"/>
+                                <Grid Margin="0,0,0,25">
+                                    <TextBlock Text="TOTAL A PAGAR" Foreground="#651FFF" FontWeight="Bold" FontSize="16"/>
+                                    <TextBlock x:Name="txtTotal" Text="0,00€" Foreground="#651FFF" FontWeight="Bold" FontSize="20" HorizontalAlignment="Right"/>
+                                </Grid>
+                                <Button Content="PAGAR AHORA" Click="BtnPagarAhora_Click" Height="50" Background="#651FFF" Foreground="White" FontWeight="Bold" FontSize="14" BorderThickness="0" Cursor="Hand">
+                                    <Button.Resources>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="8"/>
+                                        </Style>
+                                    </Button.Resources>
+                                </Button>
+                                <Button Content="Seguir comprando" Click="BtnVolver_Click" Background="Transparent" Foreground="#888" BorderThickness="0" Margin="0,15,0,0" Cursor="Hand"/>
+                            </StackPanel>
+                        </Border>
                     </Grid>
 
-                    <Grid x:Name="GridCommunity" Visibility="Collapsed" Background="Transparent">
-                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                            <TextBlock Text="COMUNIDAD" Foreground="#FF0055" FontSize="40" FontWeight="Bold" HorizontalAlignment="Center"/>
-                            <TextBlock Text="Foros • Clanes • Chat Global" Foreground="#888" FontSize="20" HorizontalAlignment="Center" Margin="0,10"/>
-                        </StackPanel>
+                    <Grid x:Name="GridProfile" Visibility="Collapsed" Margin="30">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="300"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Column="0" Background="#15151A" CornerRadius="15,0,0,15">
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                <Grid Margin="0,0,0,20">
+                                    <Border Width="120" Height="120" CornerRadius="60" BorderBrush="{StaticResource AccentColor}" BorderThickness="3">
+                                        <Border.Background>
+                                            <ImageBrush x:Name="imgPerfilUser" ImageSource="/Assets/logo.ico" Stretch="UniformToFill"/>
+                                        </Border.Background>
+                                    </Border>
+                                    <Button Click="BtnSubirFotoPerfil_Click" Width="30" Height="30" Background="#333" BorderThickness="0" Cursor="Hand" 
+                                            HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,0,0">
+                                        <Button.Resources>
+                                            <Style TargetType="Border">
+                                                <Setter Property="CornerRadius" Value="15"/>
+                                            </Style>
+                                        </Button.Resources>
+                                        <TextBlock Text="📷" Foreground="White" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Button>
+                                </Grid>
+
+                                <TextBlock x:Name="lblPerfilUser" Text="Usuario" Foreground="White" FontWeight="Bold" FontSize="20" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+
+                                <Border Background="#333" CornerRadius="4" Padding="10,2" HorizontalAlignment="Center" Margin="0,0,0,20">
+                                    <TextBlock x:Name="lblPerfilRol" Text="USER" Foreground="#AAA" FontSize="12" FontWeight="Bold"/>
+                                </Border>
+
+                                <TextBlock x:Name="lblPerfilFecha" Text="Miembro desde: 2024" Foreground="#666" FontSize="12" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Column="1" Background="#1E1E24" CornerRadius="0,15,15,0" Padding="40">
+                            <StackPanel>
+                                <Button Content="✕" Click="BtnCerrarPerfil_Click" HorizontalAlignment="Right" Background="Transparent" Foreground="#666" BorderThickness="0" FontSize="18" Cursor="Hand"/>
+
+                                <TextBlock Text="AJUSTES DE CUENTA" Foreground="White" FontWeight="Bold" FontSize="16" Margin="0,0,0,20"/>
+
+                                <TextBlock Text="Correo Electrónico" Foreground="{StaticResource TextSecondary}" FontSize="12" FontWeight="Bold" Margin="0,0,0,5"/>
+                                <TextBox x:Name="txtEmailPerfil" Style="{StaticResource NexusInputStyle}" Margin="0,0,0,25"/>
+
+                                <TextBlock Text="CAMBIAR CONTRASEÑA" Foreground="{StaticResource AccentColor}" FontWeight="Bold" FontSize="14" Margin="0,0,0,15"/>
+
+                                <TextBlock Text="Contraseña Actual" Foreground="{StaticResource TextSecondary}" FontSize="12" FontWeight="Bold" Margin="0,0,0,5"/>
+                                <TextBox x:Name="txtPassActual" Style="{StaticResource NexusInputStyle}" Margin="0,0,0,15"/>
+
+                                <TextBlock Text="Nueva Contraseña" Foreground="{StaticResource TextSecondary}" FontSize="12" FontWeight="Bold" Margin="0,0,0,5"/>
+                                <TextBox x:Name="txtPassNueva" Style="{StaticResource NexusInputStyle}" Margin="0,0,0,25"/>
+
+                                <Button Content="GUARDAR CAMBIOS" Click="BtnGuardarPerfil_Click" Height="45" Background="{StaticResource AccentColor}" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand">
+                                    <Button.Resources>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="8"/>
+                                        </Style>
+                                    </Button.Resources>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <Grid x:Name="GridLibrary" Visibility="Visible">
+                        <ScrollViewer x:Name="MainScroll" VerticalScrollBarVisibility="Hidden" Margin="30,10,30,30">
+                            <StackPanel>
+                                <Border Height="380" CornerRadius="12" Margin="0,0,0,40">
+                                    <Border.Background>
+                                        <ImageBrush ImageSource="/Assets/gears.jpg" Stretch="UniformToFill" Opacity="0.9"/>
+                                    </Border.Background>
+                                    <Grid>
+                                        <Border CornerRadius="12" Background="#55000000"/>
+                                        <StackPanel VerticalAlignment="Bottom" Margin="40">
+                                            <Border Background="{StaticResource AccentColor}" HorizontalAlignment="Left" CornerRadius="4" Padding="8,4" Margin="0,0,0,15">
+                                                <TextBlock Text="DESTACADO" Foreground="White" FontSize="10" FontWeight="Bold"/>
+                                            </Border>
+                                            <TextBlock Text="BIENVENIDO A NEXUS" Foreground="White" FontSize="50" FontWeight="Black"/>
+                                            <TextBlock Text="Explora el catálogo completo a continuación" Foreground="#DDD" FontSize="16" Margin="0,5,0,0"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                                <Grid Margin="0,0,0,20">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="CATÁLOGO DISPONIBLE" Foreground="White" FontSize="16" FontWeight="Bold" VerticalAlignment="Center"/>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                        <TextBlock Text="Filtrar por:" Foreground="#888" VerticalAlignment="Center" Margin="0,0,10,0" FontSize="12"/>
+                                        <ComboBox x:Name="cmbFiltro" Width="150" Height="30" SelectionChanged="CmbFiltro_SelectionChanged" 
+                                                  Style="{StaticResource NexusComboStyle}">
+                                            <ComboBoxItem Content="Todos" IsSelected="True"/>
+                                            <ComboBoxItem Content="Acción"/>
+                                            <ComboBoxItem Content="Shooter"/>
+                                            <ComboBoxItem Content="Carreras"/>
+                                            <ComboBoxItem Content="RPG"/>
+                                            <ComboBoxItem Content="Estrategia"/>
+                                            <ComboBoxItem Content="Terror"/>
+                                            <ComboBoxItem Content="Deportes"/>
+                                            <ComboBoxItem Content="Aventura"/>
+                                        </ComboBox>
+                                    </StackPanel>
+                                </Grid>
+                                <ListBox x:Name="ListaJuegos" Background="Transparent" BorderThickness="0" 
+                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                         PreviewMouseWheel="ListaJuegos_PreviewMouseWheel">
+                                    <ListBox.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel Orientation="Horizontal" />
+                                        </ItemsPanelTemplate>
+                                    </ListBox.ItemsPanel>
+                                    <ListBox.ItemContainerStyle>
+                                        <Style TargetType="ListBoxItem">
+                                            <Setter Property="Margin" Value="0,0,20,20"/>
+                                            <Setter Property="Padding" Value="0"/>
+                                            <Setter Property="Background" Value="Transparent"/>
+                                            <Setter Property="Cursor" Value="Hand"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="ListBoxItem">
+                                                        <Grid>
+                                                            <Border x:Name="bd" CornerRadius="10" Background="Transparent" BorderBrush="Transparent" BorderThickness="2">
+                                                                <ContentPresenter/>
+                                                            </Border>
+                                                        </Grid>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource AccentColor}"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </ListBox.ItemContainerStyle>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Width="250" Height="320" MouseLeftButtonDown="Juego_Click" Tag="{Binding}">
+                                                <Border CornerRadius="10" Background="#1E1E24" ClipToBounds="True">
+                                                    <Grid>
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="2*"/>
+                                                            <RowDefinition Height="1*"/>
+                                                        </Grid.RowDefinitions>
+                                                        <Image Source="{Binding CaratulaImagen, TargetNullValue=/Assets/logo.ico}" Stretch="UniformToFill" Grid.Row="0"/>
+                                                        <StackPanel Grid.Row="1" Margin="15">
+                                                            <TextBlock Text="{Binding Titulo}" Foreground="White" FontWeight="Bold" FontSize="16" TextTrimming="CharacterEllipsis"/>
+                                                            <TextBlock Text="{Binding Genero}" Foreground="#888" FontSize="12" Margin="0,2,0,10"/>
+                                                            <Grid VerticalAlignment="Bottom">
+                                                                <TextBlock Text="{Binding PrecioFormato}" Foreground="{StaticResource AccentColor}" FontWeight="Bold" FontSize="14" HorizontalAlignment="Right"/>
+                                                            </Grid>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </Border>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </StackPanel>
+                        </ScrollViewer>
                     </Grid>
 
                     <Grid x:Name="GridDetails" Visibility="Collapsed" Background="{StaticResource BgDark}">
@@ -148,54 +395,170 @@
                             <ColumnDefinition Width="2*"/>
                             <ColumnDefinition Width="1*"/>
                         </Grid.ColumnDefinitions>
-
                         <Grid Grid.Column="0">
-                            <Border x:Name="ImgDetalle" Margin="20" CornerRadius="15">
+                            <Border x:Name="ImgDetalleBorder" Margin="20" CornerRadius="15">
                                 <Border.Background>
-                                    <ImageBrush x:Name="BrushDetalle" ImageSource="/Assets/gears.jpg" Stretch="UniformToFill"/>
+                                    <ImageBrush x:Name="BrushDetalle" Stretch="UniformToFill"/>
                                 </Border.Background>
                                 <Border CornerRadius="15" Background="#55000000"/>
                             </Border>
-                            <Button Content="← VOLVER A BIBLIOTECA" Click="BtnVolver_Click" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="40" Padding="15,10" Background="#99000000" Foreground="White" BorderThickness="0" Cursor="Hand" FontWeight="Bold"/>
+                            <Button Content="← VOLVER AL CATÁLOGO" Click="BtnVolver_Click" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="40" Padding="15,10" Background="#99000000" Foreground="White" BorderThickness="0" Cursor="Hand" FontWeight="Bold"/>
                         </Grid>
-
                         <StackPanel Grid.Column="1" Margin="0,40,40,40">
-                            <TextBlock x:Name="txtTitulo" Text="GEARS 5" Foreground="White" FontSize="40" FontWeight="Black" TextWrapping="Wrap"/>
-
+                            <TextBlock x:Name="txtTitulo" Text="TÍTULO" Foreground="White" FontSize="40" FontWeight="Black" TextWrapping="Wrap"/>
                             <StackPanel Orientation="Horizontal" Margin="0,10,0,20">
                                 <Border Background="#333" CornerRadius="4" Padding="8,4" Margin="0,0,10,0">
-                                    <TextBlock x:Name="txtGenero" Text="ACCIÓN" Foreground="#AAA" FontSize="12" FontWeight="Bold"/>
+                                    <TextBlock x:Name="txtGenero" Text="GÉNERO" Foreground="#AAA" FontSize="12" FontWeight="Bold"/>
                                 </Border>
                                 <Border Background="{StaticResource AccentColor}" CornerRadius="4" Padding="8,4">
-                                    <TextBlock x:Name="txtPrecio" Text="39.99€" Foreground="White" FontSize="12" FontWeight="Bold"/>
+                                    <TextBlock x:Name="txtPrecio" Text="0.00€" Foreground="White" FontSize="12" FontWeight="Bold"/>
                                 </Border>
                             </StackPanel>
-
-                            <TextBlock Text="SINOPSIS" Foreground="{StaticResource AccentColor}" FontWeight="Bold" Margin="0,0,0,5"/>
-                            <TextBlock x:Name="txtDesc" Text="..." Foreground="#CCC" TextWrapping="Wrap" FontSize="14" LineHeight="22"/>
-
+                            <TextBlock Text="DESCRIPCIÓN" Foreground="{StaticResource AccentColor}" FontWeight="Bold" Margin="0,0,0,5"/>
+                            <TextBlock x:Name="txtDesc" Text="..." Foreground="#CCC" TextWrapping="Wrap" FontSize="14" LineHeight="22" MaxHeight="150" TextTrimming="CharacterEllipsis"/>
                             <StackPanel Margin="0,40,0,0">
-                                <Button x:Name="btnAccion" Content="INSTALAR" Click="BtnAccion_Click" Height="60" Background="{StaticResource AccentColor}" Foreground="White" FontSize="18" FontWeight="Bold" BorderThickness="0" Cursor="Hand"/>
-
-                                <Grid x:Name="PanelDescarga" Visibility="Collapsed" Margin="0,10,0,0">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,5">
-                                        <TextBlock Text="Descargando..." Foreground="#AAA" FontSize="12" Margin="0,0,10,0"/>
-                                        <TextBlock x:Name="txtPorcentaje" Text="0%" Foreground="{StaticResource AccentColor}" FontWeight="Bold" FontSize="12"/>
-                                    </StackPanel>
-                                    <ProgressBar x:Name="BarraProgreso" Grid.Row="1" Height="8" Minimum="0" Maximum="100" Value="0" Background="#333" BorderThickness="0" Foreground="{StaticResource AccentColor}"/>
-                                </Grid>
-                            </StackPanel>
-
-                            <StackPanel Margin="0,30,0,0">
-                                <TextBlock Text="Desarrollador: Xbox Game Studios" Foreground="#666"/>
-                                <TextBlock Text="Espacio en disco: 80 GB" Foreground="#666" Margin="0,5,0,0"/>
-                                <TextBlock Text="Valoración: ⭐⭐⭐⭐⭐" Foreground="#FFD700" Margin="0,5,0,0"/>
+                                <Button x:Name="btnAccion" Content="AÑADIR AL CARRITO" Click="BtnAccion_Click" Height="60" Background="{StaticResource AccentColor}" Foreground="White" FontSize="18" FontWeight="Bold" BorderThickness="0" Cursor="Hand"/>
                             </StackPanel>
                         </StackPanel>
+                    </Grid>
+
+                    <Grid x:Name="GridMyGames" Visibility="Collapsed">
+                        <TextBlock Text="AQUÍ IRÁ TU BIBLIOTECA PERSONAL" Foreground="White" FontSize="30" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <Grid x:Name="GridCommunity" Visibility="Collapsed" Margin="30,10,30,30">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="2*"/>
+                            <ColumnDefinition Width="20"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Background="#1E1E24" CornerRadius="15" Padding="20">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                    <TextBlock Text="💬 CHAT GLOBAL" Foreground="White" FontWeight="Bold" FontSize="16"/>
+                                    <TextBlock Text=" • En línea" Foreground="#00E676" FontSize="12" VerticalAlignment="Center" Margin="5,0,0,0"/>
+                                </StackPanel>
+                                <ListBox x:Name="ListaChat" Grid.Row="1" Background="Transparent" BorderThickness="0" 
+                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled" Margin="0,0,0,15">
+                                    <ListBox.ItemContainerStyle>
+                                        <Style TargetType="ListBoxItem">
+                                            <Setter Property="Focusable" Value="False"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="ListBoxItem">
+                                                        <ContentPresenter/>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </ListBox.ItemContainerStyle>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Border Grid.Column="1" Background="#2C2C35" CornerRadius="0,10,10,10" Padding="12,8" HorizontalAlignment="Left">
+                                                    <StackPanel>
+                                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                                            <TextBlock Text="{Binding Usuario}" Foreground="{Binding ColorNombre}" FontWeight="Bold" FontSize="12"/>
+                                                            <TextBlock Text="{Binding Fecha}" Foreground="#666" FontSize="10" Margin="10,2,0,0"/>
+                                                        </StackPanel>
+                                                        <TextBlock Text="{Binding Texto}" Foreground="#DDD" TextWrapping="Wrap" MaxWidth="450"/>
+                                                    </StackPanel>
+                                                </Border>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                                <Grid Grid.Row="2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox x:Name="txtMensajeChat" Height="40" Background="#121212" Foreground="White" BorderThickness="0" 
+                                             VerticalContentAlignment="Center" Padding="15,0" Tag="Escribe algo..."
+                                             KeyDown="TxtMensajeChat_KeyDown">
+                                        <TextBox.Resources>
+                                            <Style TargetType="Border">
+                                                <Setter Property="CornerRadius" Value="20"/>
+                                            </Style>
+                                        </TextBox.Resources>
+                                    </TextBox>
+                                    <Button Grid.Column="1" Click="BtnEnviarChat_Click" Width="40" Height="40" Margin="10,0,0,0" 
+                                            Background="{StaticResource AccentColor}" BorderThickness="0" Cursor="Hand">
+                                        <Button.Resources>
+                                            <Style TargetType="Border">
+                                                <Setter Property="CornerRadius" Value="20"/>
+                                            </Style>
+                                        </Button.Resources>
+                                        <Path Data="M2,21L23,12L2,3V10L17,12L2,14V21Z" Fill="White" Width="15" Height="15"/>
+                                    </Button>
+                                </Grid>
+                            </Grid>
+                        </Border>
+                        <Border Grid.Column="2" Background="#121212" CornerRadius="15" BorderBrush="#333" BorderThickness="1">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <Border Background="{StaticResource AccentColor}" CornerRadius="15,15,0,0" Padding="15">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="🏆 TOP GAMERS" Foreground="White" FontWeight="Black" FontSize="18" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Los mejores de Nexus" Foreground="#DDD" FontSize="10" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                                <ListBox x:Name="ListaTopGamers" Grid.Row="1" Background="Transparent" BorderThickness="0" Margin="10">
+                                    <ListBox.ItemContainerStyle>
+                                        <Style TargetType="ListBoxItem">
+                                            <Setter Property="Focusable" Value="False"/>
+                                            <Setter Property="Margin" Value="0,0,0,10"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="ListBoxItem">
+                                                        <ContentPresenter/>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </ListBox.ItemContainerStyle>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#1E1E24" CornerRadius="10" Padding="10" Height="60">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="30"/>
+                                                        <ColumnDefinition Width="50"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Text="{Binding Rank}" Foreground="#FFD700" FontWeight="Bold" FontSize="20" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                                    <Border Grid.Column="1" Width="40" Height="40" CornerRadius="20" Margin="5,0">
+                                                        <Border.Background>
+                                                            <ImageBrush ImageSource="{Binding AvatarImagen, TargetNullValue=/Assets/logo.ico}" Stretch="UniformToFill"/>
+                                                        </Border.Background>
+                                                    </Border>
+                                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Nombre}" Foreground="White" FontWeight="Bold"/>
+                                                        <TextBlock Text="Jugador Pro" Foreground="#666" FontSize="10"/>
+                                                    </StackPanel>
+                                                    <Border Grid.Column="3" Background="#333" CornerRadius="5" Padding="5,2">
+                                                        <TextBlock Text="{Binding Nivel, StringFormat='Nivel {0}'}" Foreground="#888" FontSize="10"/>
+                                                    </Border>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </Grid>
+                        </Border>
                     </Grid>
 
                 </Grid>

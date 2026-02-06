@@ -1,0 +1,51 @@
+﻿<Window x:Class="PracticaLoginWPF.HelpWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Ayuda Nexus" Height="500" Width="400"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent">
+
+    <Border Background="#1E1E24" CornerRadius="15" BorderBrush="#651FFF" BorderThickness="1">
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0" Margin="0,0,0,20">
+                <TextBlock Text="AYUDA NEXUS" Foreground="#651FFF" FontWeight="Bold" FontSize="20" HorizontalAlignment="Center"/>
+                <TextBlock Text="Guía de usuario v1.0" Foreground="#888" FontSize="12" HorizontalAlignment="Center"/>
+            </StackPanel>
+
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <TextBlock Text="1. NAVEGACIÓN" Foreground="White" FontWeight="Bold" Margin="0,10,0,5"/>
+                    <TextBlock Text="Usa el menú superior para moverte entre el Catálogo (Tienda), tu Biblioteca y la Comunidad." Foreground="#CCC" TextWrapping="Wrap" FontSize="13"/>
+
+                    <TextBlock Text="2. CÓMO COMPRAR" Foreground="White" FontWeight="Bold" Margin="0,15,0,5"/>
+                    <TextBlock Text="Haz clic en cualquier juego del catálogo. Si no lo tienes, verás el botón de COMPRAR. Tras confirmar, se añadirá a tu biblioteca." Foreground="#CCC" TextWrapping="Wrap" FontSize="13"/>
+
+                    <TextBlock Text="3. COMUNIDAD" Foreground="White" FontWeight="Bold" Margin="0,15,0,5"/>
+                    <TextBlock Text="Chatea con otros usuarios en tiempo real y consulta el Ranking para ver quién tiene más juegos." Foreground="#CCC" TextWrapping="Wrap" FontSize="13"/>
+
+                    <TextBlock Text="4. ADMINISTRACIÓN" Foreground="White" FontWeight="Bold" Margin="0,15,0,5"/>
+                    <TextBlock Text="Si eres Admin, verás un botón rojo arriba. Úsalo para gestionar usuarios (banear/editar) y añadir juegos nuevos." Foreground="#CCC" TextWrapping="Wrap" FontSize="13"/>
+
+                    <TextBlock Text="5. SOPORTE" Foreground="White" FontWeight="Bold" Margin="0,15,0,5"/>
+                    <TextBlock Text="Para problemas técnicos, contacta con admin@nexus.com." Foreground="#CCC" TextWrapping="Wrap" FontSize="13" Margin="0,0,0,20"/>
+                </StackPanel>
+            </ScrollViewer>
+
+            <Button Grid.Row="2" Content="ENTENDIDO" Click="BtnCerrar_Click" 
+                    Height="40" Background="#651FFF" Foreground="White" FontWeight="Bold" 
+                    BorderThickness="0" Cursor="Hand" Margin="0,20,0,0">
+                <Button.Resources>
+                    <Style TargetType="Border">
+                        <Setter Property="CornerRadius" Value="10"/>
+                    </Style>
+                </Button.Resources>
+            </Button>
+        </Grid>
+    </Border>
+</Window>
