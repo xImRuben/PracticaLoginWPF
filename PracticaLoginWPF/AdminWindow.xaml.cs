@@ -24,8 +24,6 @@ namespace PracticaLoginWPF
             ActualizarStats();
         }
 
-        // ... (El resto del código se mantiene igual, enfócate en CargarJuegos y GuardarJuego)
-
         private void ActualizarStats()
         {
             try
@@ -56,7 +54,9 @@ namespace PracticaLoginWPF
             }
         }
 
-        // USUARIOS -----------------------------------------
+        // =======================================================
+        // GESTIÓN DE USUARIOS
+        // =======================================================
         private void CargarUsuarios()
         {
             try { ListaUsuarios.ItemsSource = db.ObtenerUsuarios(txtBuscar.Text); } catch { }
@@ -82,7 +82,7 @@ namespace PracticaLoginWPF
 
         private void BtnSubirFoto_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog op = new OpenFileDialog { Filter = "Imágenes|*.jpg;*.png;*.jpeg" };
+            OpenFileDialog op = new OpenFileDialog { Filter = "Imágenes|*.jpg;*.png" };
             if (op.ShowDialog() == true)
             {
                 try
@@ -91,7 +91,7 @@ namespace PracticaLoginWPF
                     BitmapImage bi = new BitmapImage(); bi.BeginInit(); bi.StreamSource = new MemoryStream(avatarUserBytes); bi.EndInit();
                     imgAvatarPreview.Source = bi;
                 }
-                catch { MessageBox.Show("Error carga imagen."); }
+                catch { MessageBox.Show("Error al cargar imagen."); }
             }
         }
 
@@ -113,6 +113,7 @@ namespace PracticaLoginWPF
                 Rol = (cmbRol.SelectedItem as ComboBoxItem).Content.ToString(),
                 Estado = (cmbEstado.SelectedItem as ComboBoxItem).Content.ToString()
             };
+
             db.EditarUsuario(u);
             db.ActualizarAvatar(u.Id, avatarUserBytes);
             CargarUsuarios();
@@ -128,13 +129,39 @@ namespace PracticaLoginWPF
             avatarUserBytes = null;
         }
 
-        private void BtnBanear_Click(object sender, RoutedEventArgs e) { if (!string.IsNullOrEmpty(txtId.Text)) { db.BanearUsuario(int.Parse(txtId.Text), true, txtMotivo.Text); CargarUsuarios(); ActualizarStats(); } }
-        private void BtnActivar_Click(object sender, RoutedEventArgs e) { if (!string.IsNullOrEmpty(txtId.Text)) { db.BanearUsuario(int.Parse(txtId.Text), false); CargarUsuarios(); ActualizarStats(); } }
+        private void BtnBanear_Click(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(txtId.Text))
+            {
+                if (db.BanearUsuario(int.Parse(txtId.Text), true, txtMotivo.Text))
+                {
+                    MessageBox.Show($"Usuario baneado correctamente.\nMotivo: {txtMotivo.Text}");
+                    CargarUsuarios();
+                    ActualizarStats();
+                }
+            }
+        }
+
+        private void BtnActivar_Click(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(txtId.Text))
+            {
+                if (db.BanearUsuario(int.Parse(txtId.Text), false))
+                {
+                    MessageBox.Show("Usuario desbaneado y activado nuevamente.");
+                    CargarUsuarios();
+                    ActualizarStats();
+                }
+            }
+        }
+
         private void BtnEliminar_Click(object sender, RoutedEventArgs e) { if (!string.IsNullOrEmpty(txtId.Text)) { db.EliminarUsuario(int.Parse(txtId.Text)); CargarUsuarios(); ActualizarStats(); BtnLimpiar_Click(null, null); } }
         private void TxtBuscar_TextChanged(object sender, TextChangedEventArgs e) { CargarUsuarios(); }
 
 
-        // JUEGOS -----------------------------------------
+        // =======================================================
+        // GESTIÓN DE JUEGOS
+        // =======================================================
         private void CargarJuegos()
         {
             try { ListaJuegosAdmin.ItemsSource = db.ObtenerJuegos(true); } catch { }
@@ -171,7 +198,7 @@ namespace PracticaLoginWPF
                     BitmapImage bi = new BitmapImage(); bi.BeginInit(); bi.StreamSource = new MemoryStream(caratulaActualBytes); bi.EndInit();
                     imgCaratula.Source = bi;
                 }
-                catch { MessageBox.Show("Error carga imagen."); }
+                catch { MessageBox.Show("Error al cargar imagen."); }
             }
         }
 
@@ -179,7 +206,7 @@ namespace PracticaLoginWPF
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(txtTituloJuego.Text)) { MessageBox.Show("Pon un título."); return; }
+                if (string.IsNullOrWhiteSpace(txtTituloJuego.Text)) { MessageBox.Show("Título obligatorio."); return; }
 
                 string precioTexto = txtPrecioJuego.Text.Replace(",", ".");
                 decimal precioFinal = 0;
@@ -202,21 +229,20 @@ namespace PracticaLoginWPF
                     if (db.AgregarJuego(j))
                     {
                         db.RegistrarLog(Sesion.UsuarioActual.Nombre, "CREAR JUEGO", j.Titulo);
-                        MessageBox.Show("Creado."); CargarJuegos(); BtnLimpiarJuego_Click(null, null);
+                        MessageBox.Show("Juego creado."); CargarJuegos(); BtnLimpiarJuego_Click(null, null);
                     }
                 }
                 else
                 {
                     j.Id = int.Parse(txtIdJuego.Text);
-                    // AQUÍ ESTÁ LA CLAVE: ModificarJuego ahora fuerza la actualización de la imagen
                     if (db.ModificarJuego(j))
                     {
                         db.RegistrarLog(Sesion.UsuarioActual.Nombre, "EDITAR JUEGO", j.Titulo);
-                        MessageBox.Show("Actualizado."); CargarJuegos();
+                        MessageBox.Show("Juego actualizado."); CargarJuegos();
                     }
                 }
             }
-            catch (Exception ex) { MessageBox.Show("Error: " + ex.Message); }
+            catch (Exception ex) { MessageBox.Show("Error inesperado: " + ex.Message); }
         }
 
         private void BtnEliminarJuego_Click(object sender, RoutedEventArgs e)

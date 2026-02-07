@@ -34,7 +34,9 @@ namespace PracticaLoginWPF
             }
         }
 
-        // PROPIEDAD NECESARIA PARA QUE NO FALLE EL CÍRCULO EN EL ADMIN
+        // --- NUEVO: Propiedad para el color del estado ---
+        // Si está "baneado" devuelve Rojo suave (#FF5252).
+        // Si no, devuelve Verde brillante (#00E676).
         public string ColorEstado
         {
             get

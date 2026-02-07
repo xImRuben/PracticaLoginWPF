@@ -265,6 +265,10 @@
                                 <DataTemplate>
                                     <Border Background="#1E1E24" CornerRadius="10" Width="140" Height="170" Margin="0,0,10,10">
                                         <Grid>
+                                            <Ellipse Width="15" Height="15" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="10" 
+                                                     Stroke="#1E1E24" StrokeThickness="2"
+                                                     Fill="{Binding ColorEstado}"/>
+
                                             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                                                 <Border Width="60" Height="60" CornerRadius="30" Margin="0,0,0,10">
                                                     <Image Source="{Binding AvatarImage, TargetNullValue=/Assets/logo.ico}" Stretch="UniformToFill">
@@ -275,6 +279,7 @@
                                                 </Border>
                                                 <TextBlock Text="{Binding Nombre}" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center"/>
                                                 <TextBlock Text="{Binding Rol}" Foreground="#888" FontSize="10" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="{Binding Estado}" Foreground="{Binding ColorEstado}" FontSize="10" HorizontalAlignment="Center" Margin="0,5,0,0" FontWeight="Bold"/>
                                             </StackPanel>
                                         </Grid>
                                     </Border>
@@ -334,7 +339,6 @@
                                 <CheckBox x:Name="chkVisible" Content="Visible en Tienda" Foreground="White" IsChecked="True" Margin="0,0,0,15"/>
 
                                 <Button Content="➕ NUEVO JUEGO" Click="BtnLimpiarJuego_Click" Height="30" Background="#2E7D32" Foreground="White" FontWeight="Bold" Margin="0,0,0,10"/>
-
                                 <Button Content="GUARDAR" Click="BtnGuardarJuego_Click" Height="40" Background="{StaticResource AccentColor}" Foreground="White" FontWeight="Bold" Margin="0,0,0,10"/>
 
                                 <Grid>
