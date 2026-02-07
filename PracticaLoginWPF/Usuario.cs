@@ -16,6 +16,9 @@ namespace PracticaLoginWPF
         public string Estado { get; set; } // "activo" o "baneado"
         public byte[] Avatar { get; set; }
 
+        // --- NUEVO: Propiedad para el dinero ---
+        public decimal Saldo { get; set; }
+
         public ImageSource AvatarImage
         {
             get
@@ -34,9 +37,6 @@ namespace PracticaLoginWPF
             }
         }
 
-        // --- NUEVO: Propiedad para el color del estado ---
-        // Si está "baneado" devuelve Rojo suave (#FF5252).
-        // Si no, devuelve Verde brillante (#00E676).
         public string ColorEstado
         {
             get

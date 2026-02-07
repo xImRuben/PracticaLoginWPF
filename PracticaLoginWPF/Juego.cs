@@ -15,6 +15,24 @@ namespace PracticaLoginWPF
         public bool Visible { get; set; }
         public byte[] Caratula { get; set; }
 
+        // --- NUEVO: VALORACIÓN Y ESTRELLAS ---
+        public int Valoracion { get; set; }
+
+        // Convierte el número (ej: 4) en texto (★★★★☆)
+        public string EstrellasDisplay
+        {
+            get
+            {
+                string s = "";
+                // Aseguramos que esté entre 0 y 5
+                int val = Math.Max(0, Math.Min(5, Valoracion));
+
+                for (int i = 0; i < val; i++) s += "★"; // Estrella llena
+                for (int i = val; i < 5; i++) s += "☆"; // Estrella vacía
+                return s;
+            }
+        }
+
         public string PrecioFormato { get { return Precio.ToString("0.00") + " €"; } }
 
         public ImageSource CaratulaImagen
