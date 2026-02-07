@@ -3,9 +3,67 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Ayuda Nexus" Height="500" Width="400"
         WindowStartupLocation="CenterScreen"
-        WindowStyle="None" AllowsTransparency="True" Background="Transparent">
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        MouseDown="Window_MouseDown">
 
-    <Border Background="#1E1E24" CornerRadius="15" BorderBrush="#651FFF" BorderThickness="1">
+    <Window.Resources>
+        <SolidColorBrush x:Key="PanelColor" Color="#1E1E24"/>
+        <SolidColorBrush x:Key="AccentColor" Color="#651FFF"/>
+        <SolidColorBrush x:Key="ScrollBase" Color="#25252E"/>
+
+        <Style x:Key="ModernScrollBar" TargetType="{x:Type ScrollBar}">
+            <Setter Property="Stylus.IsFlicksEnabled" Value="false" />
+            <Setter Property="Foreground" Value="{StaticResource AccentColor}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Width" Value="8" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ScrollBar}">
+                        <Grid x:Name="GridRoot" Width="8" Background="{TemplateBinding Background}">
+                            <Track x:Name="PART_Track" IsDirectionReversed="true" Focusable="false">
+                                <Track.Thumb>
+                                    <Thumb x:Name="Thumb">
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="{x:Type Thumb}">
+                                                <Border Background="{StaticResource AccentColor}" CornerRadius="4"/>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="{x:Type ScrollViewer}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ScrollViewer}">
+                        <Grid x:Name="Grid" Background="{TemplateBinding Background}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <ScrollContentPresenter x:Name="PART_ScrollContentPresenter" Grid.Column="0" Grid.Row="0" Margin="{TemplateBinding Padding}" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" CanContentScroll="{TemplateBinding CanContentScroll}"/>
+                            <ScrollBar x:Name="PART_VerticalScrollBar" Grid.Column="1" AutomationProperties.AutomationId="VerticalScrollBar" Cursor="Arrow" Grid.Row="0" Maximum="{TemplateBinding ScrollableHeight}" Minimum="0" Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}" Value="{Binding VerticalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}" ViewportSize="{TemplateBinding ViewportHeight}" Style="{StaticResource ModernScrollBar}"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Border Background="{StaticResource PanelColor}" CornerRadius="15" BorderBrush="#333" BorderThickness="1">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="30" ShadowDepth="10" Opacity="0.5"/>
+        </Border.Effect>
+
         <Grid Margin="20">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -14,32 +72,42 @@
             </Grid.RowDefinitions>
 
             <StackPanel Grid.Row="0" Margin="0,0,0,20">
-                <TextBlock Text="AYUDA NEXUS" Foreground="#651FFF" FontWeight="Bold" FontSize="20" HorizontalAlignment="Center"/>
-                <TextBlock Text="Guía de usuario v1.0" Foreground="#888" FontSize="12" HorizontalAlignment="Center"/>
+                <TextBlock Text="CENTRO DE AYUDA" Foreground="{StaticResource AccentColor}" FontWeight="Black" FontSize="20" HorizontalAlignment="Center"/>
+                <TextBlock Text="Guía rápida de Nexus v1.0" Foreground="#888" FontSize="12" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                <Separator Background="#333" Margin="20,15,20,0"/>
             </StackPanel>
 
-            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <ScrollViewer Grid.Row="1" Margin="0,0,5,20" VerticalScrollBarVisibility="Auto">
                 <StackPanel>
-                    <TextBlock Text="1. NAVEGACIÓN" Foreground="White" FontWeight="Bold" Margin="0,10,0,5"/>
-                    <TextBlock Text="Usa el menú superior para moverte entre el Catálogo (Tienda), tu Biblioteca y la Comunidad." Foreground="#CCC" TextWrapping="Wrap" FontSize="13"/>
+                    <TextBlock Text="1. NAVEGACIÓN" Foreground="White" FontWeight="Bold" Margin="0,0,0,5"/>
+                    <TextBlock Text="Usa el menú superior para moverte entre el Catálogo (Tienda), tu Biblioteca personal y la Comunidad." 
+                               Foreground="#CCC" TextWrapping="Wrap" Margin="0,0,0,20" LineHeight="20"/>
 
-                    <TextBlock Text="2. CÓMO COMPRAR" Foreground="White" FontWeight="Bold" Margin="0,15,0,5"/>
-                    <TextBlock Text="Haz clic en cualquier juego del catálogo. Si no lo tienes, verás el botón de COMPRAR. Tras confirmar, se añadirá a tu biblioteca." Foreground="#CCC" TextWrapping="Wrap" FontSize="13"/>
+                    <TextBlock Text="2. CÓMO COMPRAR" Foreground="White" FontWeight="Bold" Margin="0,0,0,5"/>
+                    <TextBlock Text="Haz clic en cualquier juego del catálogo. Si no lo tienes, verás el botón de 'AÑADIR AL CARRITO'. Luego ve al carrito y confirma el pago." 
+                               Foreground="#CCC" TextWrapping="Wrap" Margin="0,0,0,20" LineHeight="20"/>
 
-                    <TextBlock Text="3. COMUNIDAD" Foreground="White" FontWeight="Bold" Margin="0,15,0,5"/>
-                    <TextBlock Text="Chatea con otros usuarios en tiempo real y consulta el Ranking para ver quién tiene más juegos." Foreground="#CCC" TextWrapping="Wrap" FontSize="13"/>
+                    <TextBlock Text="3. BIBLIOTECA Y JUGAR" Foreground="White" FontWeight="Bold" Margin="0,0,0,5"/>
+                    <TextBlock Text="En 'Mi Biblioteca' están tus juegos comprados. Haz clic en uno y pulsa 'JUGAR' para iniciar el lanzador." 
+                               Foreground="#CCC" TextWrapping="Wrap" Margin="0,0,0,20" LineHeight="20"/>
 
-                    <TextBlock Text="4. ADMINISTRACIÓN" Foreground="White" FontWeight="Bold" Margin="0,15,0,5"/>
-                    <TextBlock Text="Si eres Admin, verás un botón rojo arriba. Úsalo para gestionar usuarios (banear/editar) y añadir juegos nuevos." Foreground="#CCC" TextWrapping="Wrap" FontSize="13"/>
+                    <TextBlock Text="4. COMUNIDAD" Foreground="White" FontWeight="Bold" Margin="0,0,0,5"/>
+                    <TextBlock Text="Chatea con otros usuarios en tiempo real y consulta el Ranking para ver quién tiene más juegos en su colección." 
+                               Foreground="#CCC" TextWrapping="Wrap" Margin="0,0,0,20" LineHeight="20"/>
 
-                    <TextBlock Text="5. SOPORTE" Foreground="White" FontWeight="Bold" Margin="0,15,0,5"/>
-                    <TextBlock Text="Para problemas técnicos, contacta con admin@nexus.com." Foreground="#CCC" TextWrapping="Wrap" FontSize="13" Margin="0,0,0,20"/>
+                    <TextBlock Text="5. ADMINISTRACIÓN" Foreground="White" FontWeight="Bold" Margin="0,0,0,5"/>
+                    <TextBlock Text="Si eres Admin, verás un botón rojo arriba. Úsalo para gestionar usuarios (banear/editar) y añadir juegos nuevos al catálogo." 
+                               Foreground="#CCC" TextWrapping="Wrap" Margin="0,0,0,20" LineHeight="20"/>
+
+                    <TextBlock Text="6. ATAJOS" Foreground="White" FontWeight="Bold" Margin="0,0,0,5"/>
+                    <TextBlock Text="Pulsa 'F1' en cualquier momento para volver a ver esta ayuda." 
+                               Foreground="#CCC" TextWrapping="Wrap" Margin="0,0,0,20" LineHeight="20"/>
                 </StackPanel>
             </ScrollViewer>
 
             <Button Grid.Row="2" Content="ENTENDIDO" Click="BtnCerrar_Click" 
-                    Height="40" Background="#651FFF" Foreground="White" FontWeight="Bold" 
-                    BorderThickness="0" Cursor="Hand" Margin="0,20,0,0">
+                    Height="45" Background="{StaticResource AccentColor}" Foreground="White" 
+                    FontWeight="Bold" BorderThickness="0" Cursor="Hand" FontSize="14">
                 <Button.Resources>
                     <Style TargetType="Border">
                         <Setter Property="CornerRadius" Value="10"/>

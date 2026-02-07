@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -13,6 +14,7 @@ namespace PracticaLoginWPF
     {
         ConexionDB db = new ConexionDB();
         byte[] caratulaActualBytes = null;
+        byte[] avatarUserBytes = null;
 
         public AdminWindow()
         {
@@ -22,20 +24,24 @@ namespace PracticaLoginWPF
             ActualizarStats();
         }
 
+        // ... (El resto del código se mantiene igual, enfócate en CargarJuegos y GuardarJuego)
+
         private void ActualizarStats()
         {
-            int[] datos = db.ObtenerEstadisticas();
-            lblTotal.Text = datos[0].ToString();
-            lblActivos.Text = datos[1].ToString();
-            lblBaneados.Text = datos[2].ToString();
+            try
+            {
+                int[] datos = db.ObtenerEstadisticas();
+                lblTotal.Text = datos[0].ToString();
+                lblActivos.Text = datos[1].ToString();
+                lblBaneados.Text = datos[2].ToString();
+            }
+            catch { }
         }
 
-        // =======================================================
-        // NAVEGACIÓN
-        // =======================================================
         private void Nav_Click(object sender, RoutedEventArgs e)
         {
             RadioButton rb = sender as RadioButton;
+            if (rb == null) return;
             string tag = rb.Tag.ToString();
 
             if (tag == "Users")
@@ -50,12 +56,10 @@ namespace PracticaLoginWPF
             }
         }
 
-        // =======================================================
-        // GESTIÓN DE USUARIOS
-        // =======================================================
+        // USUARIOS -----------------------------------------
         private void CargarUsuarios()
         {
-            ListaUsuarios.ItemsSource = db.ObtenerUsuarios(txtBuscar.Text);
+            try { ListaUsuarios.ItemsSource = db.ObtenerUsuarios(txtBuscar.Text); } catch { }
         }
 
         private void ListaUsuarios_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -70,32 +74,31 @@ namespace PracticaLoginWPF
                 foreach (ComboBoxItem item in cmbRol.Items) if (item.Content.ToString() == u.Rol) cmbRol.SelectedItem = item;
                 foreach (ComboBoxItem item in cmbEstado.Items) if (item.Content.ToString() == u.Estado) cmbEstado.SelectedItem = item;
                 txtMotivo.Text = (u.Estado == "baneado") ? db.ObtenerMotivoBan(u.Nombre) : "";
+
                 imgAvatarPreview.Source = u.AvatarImage ?? new BitmapImage(new Uri("pack://application:,,,/Assets/logo.ico"));
+                avatarUserBytes = u.Avatar;
             }
         }
 
         private void BtnSubirFoto_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrEmpty(txtId.Text)) return;
-            OpenFileDialog op = new OpenFileDialog { Filter = "Imágenes|*.jpg;*.png" };
+            OpenFileDialog op = new OpenFileDialog { Filter = "Imágenes|*.jpg;*.png;*.jpeg" };
             if (op.ShowDialog() == true)
             {
-                byte[] img = File.ReadAllBytes(op.FileName);
-                if (db.ActualizarAvatar(int.Parse(txtId.Text), img))
+                try
                 {
-                    CargarUsuarios();
-                    imgAvatarPreview.Source = new BitmapImage(new Uri(op.FileName));
+                    avatarUserBytes = File.ReadAllBytes(op.FileName);
+                    BitmapImage bi = new BitmapImage(); bi.BeginInit(); bi.StreamSource = new MemoryStream(avatarUserBytes); bi.EndInit();
+                    imgAvatarPreview.Source = bi;
                 }
+                catch { MessageBox.Show("Error carga imagen."); }
             }
         }
 
         private void BtnBorrarFoto_Click(object sender, RoutedEventArgs e)
         {
-            if (!string.IsNullOrEmpty(txtId.Text) && db.EliminarAvatar(int.Parse(txtId.Text)))
-            {
-                CargarUsuarios();
-                imgAvatarPreview.Source = new BitmapImage(new Uri("pack://application:,,,/Assets/logo.ico"));
-            }
+            avatarUserBytes = null;
+            imgAvatarPreview.Source = new BitmapImage(new Uri("pack://application:,,,/Assets/logo.ico"));
         }
 
         private void BtnGuardar_Click(object sender, RoutedEventArgs e)
@@ -110,13 +113,19 @@ namespace PracticaLoginWPF
                 Rol = (cmbRol.SelectedItem as ComboBoxItem).Content.ToString(),
                 Estado = (cmbEstado.SelectedItem as ComboBoxItem).Content.ToString()
             };
-            if (db.EditarUsuario(u)) { CargarUsuarios(); ActualizarStats(); MessageBox.Show("Guardado."); }
+            db.EditarUsuario(u);
+            db.ActualizarAvatar(u.Id, avatarUserBytes);
+            CargarUsuarios();
+            ActualizarStats();
+            MessageBox.Show("Usuario guardado.");
         }
 
         private void BtnLimpiar_Click(object sender, RoutedEventArgs e)
         {
             txtId.Text = ""; txtNombre.Text = ""; txtPass.Text = ""; txtEmail.Text = ""; txtMotivo.Text = "";
             ListaUsuarios.SelectedIndex = -1;
+            imgAvatarPreview.Source = new BitmapImage(new Uri("pack://application:,,,/Assets/logo.ico"));
+            avatarUserBytes = null;
         }
 
         private void BtnBanear_Click(object sender, RoutedEventArgs e) { if (!string.IsNullOrEmpty(txtId.Text)) { db.BanearUsuario(int.Parse(txtId.Text), true, txtMotivo.Text); CargarUsuarios(); ActualizarStats(); } }
@@ -124,12 +133,11 @@ namespace PracticaLoginWPF
         private void BtnEliminar_Click(object sender, RoutedEventArgs e) { if (!string.IsNullOrEmpty(txtId.Text)) { db.EliminarUsuario(int.Parse(txtId.Text)); CargarUsuarios(); ActualizarStats(); BtnLimpiar_Click(null, null); } }
         private void TxtBuscar_TextChanged(object sender, TextChangedEventArgs e) { CargarUsuarios(); }
 
-        // =======================================================
-        // GESTIÓN DE JUEGOS
-        // =======================================================
+
+        // JUEGOS -----------------------------------------
         private void CargarJuegos()
         {
-            ListaJuegosAdmin.ItemsSource = db.ObtenerJuegos(true);
+            try { ListaJuegosAdmin.ItemsSource = db.ObtenerJuegos(true); } catch { }
         }
 
         private void ListaJuegos_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -139,11 +147,8 @@ namespace PracticaLoginWPF
             {
                 txtIdJuego.Text = j.Id.ToString();
                 txtTituloJuego.Text = j.Titulo;
-
-                // SELECCIÓN DEL GÉNERO EN EL COMBOBOX
                 foreach (ComboBoxItem item in cmbGeneroJuego.Items)
                     if (item.Content.ToString() == j.Genero) cmbGeneroJuego.SelectedItem = item;
-
                 txtPrecioJuego.Text = j.Precio.ToString();
                 txtDescJuego.Text = j.Descripcion;
                 chkVisible.IsChecked = j.Visible;
@@ -160,9 +165,13 @@ namespace PracticaLoginWPF
             OpenFileDialog op = new OpenFileDialog { Filter = "Imágenes|*.jpg;*.png;*.jpeg" };
             if (op.ShowDialog() == true)
             {
-                caratulaActualBytes = File.ReadAllBytes(op.FileName);
-                BitmapImage bi = new BitmapImage(); bi.BeginInit(); bi.StreamSource = new MemoryStream(caratulaActualBytes); bi.EndInit();
-                imgCaratula.Source = bi;
+                try
+                {
+                    caratulaActualBytes = File.ReadAllBytes(op.FileName);
+                    BitmapImage bi = new BitmapImage(); bi.BeginInit(); bi.StreamSource = new MemoryStream(caratulaActualBytes); bi.EndInit();
+                    imgCaratula.Source = bi;
+                }
+                catch { MessageBox.Show("Error carga imagen."); }
             }
         }
 
@@ -170,14 +179,19 @@ namespace PracticaLoginWPF
         {
             try
             {
-                // GUARDADO DEL GÉNERO DESDE COMBOBOX
-                string generoSeleccionado = (cmbGeneroJuego.SelectedItem as ComboBoxItem)?.Content.ToString();
+                if (string.IsNullOrWhiteSpace(txtTituloJuego.Text)) { MessageBox.Show("Pon un título."); return; }
+
+                string precioTexto = txtPrecioJuego.Text.Replace(",", ".");
+                decimal precioFinal = 0;
+                decimal.TryParse(precioTexto, NumberStyles.Any, CultureInfo.InvariantCulture, out precioFinal);
+
+                string genero = (cmbGeneroJuego.SelectedItem as ComboBoxItem)?.Content.ToString();
 
                 Juego j = new Juego
                 {
                     Titulo = txtTituloJuego.Text,
-                    Genero = generoSeleccionado,
-                    Precio = decimal.Parse(txtPrecioJuego.Text),
+                    Genero = genero,
+                    Precio = precioFinal,
                     Descripcion = txtDescJuego.Text,
                     Visible = chkVisible.IsChecked == true,
                     Caratula = caratulaActualBytes
@@ -188,63 +202,43 @@ namespace PracticaLoginWPF
                     if (db.AgregarJuego(j))
                     {
                         db.RegistrarLog(Sesion.UsuarioActual.Nombre, "CREAR JUEGO", j.Titulo);
-                        MessageBox.Show("Juego creado.");
-                        CargarJuegos();
-                        BtnLimpiarJuego_Click(null, null);
+                        MessageBox.Show("Creado."); CargarJuegos(); BtnLimpiarJuego_Click(null, null);
                     }
                 }
                 else
                 {
                     j.Id = int.Parse(txtIdJuego.Text);
+                    // AQUÍ ESTÁ LA CLAVE: ModificarJuego ahora fuerza la actualización de la imagen
                     if (db.ModificarJuego(j))
                     {
                         db.RegistrarLog(Sesion.UsuarioActual.Nombre, "EDITAR JUEGO", j.Titulo);
-                        MessageBox.Show("Juego actualizado.");
-                        CargarJuegos();
+                        MessageBox.Show("Actualizado."); CargarJuegos();
                     }
                 }
             }
-            catch (Exception ex) { MessageBox.Show("Error en los datos: " + ex.Message); }
+            catch (Exception ex) { MessageBox.Show("Error: " + ex.Message); }
         }
 
         private void BtnEliminarJuego_Click(object sender, RoutedEventArgs e)
         {
-            if (!string.IsNullOrEmpty(txtIdJuego.Text))
+            if (!string.IsNullOrEmpty(txtIdJuego.Text) && MessageBox.Show("¿Eliminar?", "Confirmar", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
-                if (MessageBox.Show("¿Eliminar juego?", "Confirmar", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
-                {
-                    db.EliminarJuego(int.Parse(txtIdJuego.Text));
-                    db.RegistrarLog(Sesion.UsuarioActual.Nombre, "ELIMINAR JUEGO", txtTituloJuego.Text);
-                    CargarJuegos();
-                    BtnLimpiarJuego_Click(null, null);
-                }
+                db.EliminarJuego(int.Parse(txtIdJuego.Text));
+                CargarJuegos(); BtnLimpiarJuego_Click(null, null);
             }
         }
 
         private void BtnLimpiarJuego_Click(object sender, RoutedEventArgs e)
         {
-            txtIdJuego.Text = ""; txtTituloJuego.Text = "";
-            cmbGeneroJuego.SelectedIndex = -1; // Resetear combo
+            txtIdJuego.Text = ""; txtTituloJuego.Text = ""; cmbGeneroJuego.SelectedIndex = -1;
             txtPrecioJuego.Text = ""; txtDescJuego.Text = "";
             imgCaratula.Source = new BitmapImage(new Uri("pack://application:,,,/Assets/logo.ico"));
             caratulaActualBytes = null;
             ListaJuegosAdmin.SelectedIndex = -1;
         }
 
-        private void BtnHistorial_Click(object sender, RoutedEventArgs e)
-        {
-            LogsWindow logs = new LogsWindow();
-            logs.ShowDialog();
-        }
-
-        private void BtnApelaciones_Click(object sender, RoutedEventArgs e)
-        {
-            GestionApelacionesWindow gest = new GestionApelacionesWindow();
-            gest.ShowDialog();
-            CargarUsuarios();
-            ActualizarStats();
-        }
-
+        private void BtnHistorial_Click(object sender, RoutedEventArgs e) { LogsWindow logs = new LogsWindow(); logs.ShowDialog(); }
+        private void BtnApelaciones_Click(object sender, RoutedEventArgs e) { GestionApelacionesWindow gest = new GestionApelacionesWindow(); gest.ShowDialog(); CargarUsuarios(); ActualizarStats(); }
         private void BtnCerrar_Click(object sender, RoutedEventArgs e) => this.Close();
         private void Window_MouseDown(object sender, MouseButtonEventArgs e) { if (e.LeftButton == MouseButtonState.Pressed) DragMove(); }
     }

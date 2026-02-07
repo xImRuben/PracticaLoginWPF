@@ -13,6 +13,23 @@
         <SolidColorBrush x:Key="AccentColor" Color="#651FFF"/>
         <SolidColorBrush x:Key="TextGray" Color="#888"/>
 
+        <Style x:Key="NexusInputStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="#25252E"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#444"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
+                            <ScrollViewer x:Name="PART_ContentHost"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <ControlTemplate x:Key="ComboBoxToggleButton" TargetType="ToggleButton">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -73,23 +90,6 @@
             </Setter>
         </Style>
 
-        <Style x:Key="NexusInputStyle" TargetType="TextBox">
-            <Setter Property="Background" Value="#25252E"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderBrush" Value="#444"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="10,8"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="TextBox">
-                        <Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
-                            <ScrollViewer x:Name="PART_ContentHost"/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
         <Style x:Key="NavButtonStyle" TargetType="RadioButton">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="#AAA"/>
@@ -116,10 +116,6 @@
     </Window.Resources>
 
     <Border Background="{StaticResource BgDark}" CornerRadius="12" BorderBrush="#333" BorderThickness="1">
-        <Border.Effect>
-            <DropShadowEffect BlurRadius="20" Opacity="0.5" ShadowDepth="5"/>
-        </Border.Effect>
-
         <Grid Margin="25">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -139,9 +135,24 @@
                     <TextBlock Text=" ADMIN" Foreground="{StaticResource TextGray}" FontWeight="Light" FontSize="24" VerticalAlignment="Center"/>
                 </StackPanel>
 
-                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                     <RadioButton x:Name="navUsers" Content="👥 USUARIOS" GroupName="Nav" IsChecked="True" Style="{StaticResource NavButtonStyle}" Click="Nav_Click" Tag="Users"/>
                     <RadioButton x:Name="navGames" Content="🎮 CATÁLOGO" GroupName="Nav" Style="{StaticResource NavButtonStyle}" Click="Nav_Click" Tag="Games"/>
+
+                    <Button Content="📜 LOGS" Click="BtnHistorial_Click" Background="Transparent" Foreground="#AAA" FontWeight="Bold" BorderThickness="1" BorderBrush="#444" Padding="15,8" Margin="10,0,0,0">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="8"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+                    <Button Content="📩 APELACIONES" Click="BtnApelaciones_Click" Background="Transparent" Foreground="#AAA" FontWeight="Bold" BorderThickness="1" BorderBrush="#444" Padding="15,8" Margin="10,0,0,0">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="8"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
                 </StackPanel>
 
                 <Button Grid.Column="2" Content="✕" Click="BtnCerrar_Click" Foreground="#666" Background="Transparent" BorderThickness="0" FontSize="18" Cursor="Hand"/>
@@ -174,7 +185,6 @@
             </Grid>
 
             <Grid Grid.Row="2">
-
                 <Grid x:Name="ViewUsers" Visibility="Visible">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="320"/>
@@ -183,14 +193,9 @@
 
                     <Border Grid.Column="0" Background="{StaticResource PanelColor}" CornerRadius="10" Padding="15" Margin="0,0,25,0">
                         <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Hidden">
+                            <ScrollViewer VerticalScrollBarVisibility="Hidden">
                                 <StackPanel>
                                     <TextBlock Text="EDITAR PERFIL" Foreground="White" FontSize="14" FontWeight="Bold" Margin="0,0,0,15"/>
-
                                     <Grid HorizontalAlignment="Center" Margin="0,0,0,15">
                                         <Border Width="80" Height="80" CornerRadius="40" BorderBrush="#333" BorderThickness="2" Background="#15151A">
                                             <Image x:Name="imgAvatarPreview" Source="/Assets/logo.ico" Stretch="UniformToFill">
@@ -204,7 +209,6 @@
                                             <Button Click="BtnBorrarFoto_Click" Width="24" Height="24" Background="#D32F2F" BorderThickness="0" Cursor="Hand" Content="🗑" Foreground="White" Margin="5,0,0,0" FontSize="10"/>
                                         </StackPanel>
                                     </Grid>
-
                                     <TextBox x:Name="txtId" Visibility="Collapsed"/>
                                     <TextBlock Text="Usuario" Foreground="{StaticResource TextGray}" FontSize="10" FontWeight="Bold"/>
                                     <TextBox x:Name="txtNombre" Style="{StaticResource NexusInputStyle}" Margin="0,0,0,10"/>
@@ -212,25 +216,22 @@
                                     <TextBox x:Name="txtPass" Style="{StaticResource NexusInputStyle}" Margin="0,0,0,10"/>
                                     <TextBlock Text="Email" Foreground="{StaticResource TextGray}" FontSize="10" FontWeight="Bold"/>
                                     <TextBox x:Name="txtEmail" Style="{StaticResource NexusInputStyle}" Margin="0,0,0,10"/>
-
                                     <Grid Margin="0,0,0,15">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-                                        <ComboBox x:Name="cmbRol" Grid.Column="0" Margin="0,0,5,0" Height="35">
+                                        <ComboBox x:Name="cmbRol" Grid.Column="0" Margin="0,0,5,0" Height="35" Style="{StaticResource NexusComboStyle}">
                                             <ComboBoxItem Content="admin"/>
                                             <ComboBoxItem Content="user"/>
                                         </ComboBox>
-                                        <ComboBox x:Name="cmbEstado" Grid.Column="1" Margin="5,0,0,0" Height="35">
+                                        <ComboBox x:Name="cmbEstado" Grid.Column="1" Margin="5,0,0,0" Height="35" Style="{StaticResource NexusComboStyle}">
                                             <ComboBoxItem Content="activo"/>
                                             <ComboBoxItem Content="baneado"/>
                                         </ComboBox>
                                     </Grid>
-
                                     <Button Content="GUARDAR" Click="BtnGuardar_Click" Height="35" Background="{StaticResource AccentColor}" Foreground="White" FontWeight="Bold" Margin="0,0,0,5"/>
                                     <Button Content="LIMPIAR" Click="BtnLimpiar_Click" Height="30" Background="#333" Foreground="#AAA" BorderThickness="0"/>
-
                                     <Separator Background="#333" Margin="0,15"/>
                                     <TextBlock Text="ZONA DE PELIGRO" Foreground="#FF5252" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
                                     <TextBox x:Name="txtMotivo" Style="{StaticResource NexusInputStyle}" Margin="0,0,0,5" Tag="Motivo Baneo"/>
@@ -245,10 +246,6 @@
                                     <Button Content="ELIMINAR PERMANENTEMENTE" Click="BtnEliminar_Click" Background="Transparent" Foreground="#FF5252" Height="25" BorderThickness="1" BorderBrush="#FF5252" Margin="0,10,0,0" FontSize="10"/>
                                 </StackPanel>
                             </ScrollViewer>
-                            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15,0,0">
-                                <Button Content="📜 LOGS" Click="BtnHistorial_Click" Width="80" Height="30" Background="#303040" Foreground="White" Margin="0,0,10,0"/>
-                                <Button Content="📩 APELACIONES" Click="BtnApelaciones_Click" Width="120" Height="30" Background="#303040" Foreground="White"/>
-                            </StackPanel>
                         </Grid>
                     </Border>
 
@@ -267,17 +264,19 @@
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <Border Background="#1E1E24" CornerRadius="10" Width="140" Height="170" Margin="0,0,10,10">
-                                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                                            <Border Width="60" Height="60" CornerRadius="30" Margin="0,0,0,10">
-                                                <Image Source="{Binding AvatarImage, TargetNullValue=/Assets/logo.ico}" Stretch="UniformToFill">
-                                                    <Image.Clip>
-                                                        <EllipseGeometry Center="30,30" RadiusX="30" RadiusY="30"/>
-                                                    </Image.Clip>
-                                                </Image>
-                                            </Border>
-                                            <TextBlock Text="{Binding Nombre}" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center"/>
-                                            <TextBlock Text="{Binding Rol}" Foreground="#888" FontSize="10" HorizontalAlignment="Center"/>
-                                        </StackPanel>
+                                        <Grid>
+                                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                <Border Width="60" Height="60" CornerRadius="30" Margin="0,0,0,10">
+                                                    <Image Source="{Binding AvatarImage, TargetNullValue=/Assets/logo.ico}" Stretch="UniformToFill">
+                                                        <Image.Clip>
+                                                            <EllipseGeometry Center="30,30" RadiusX="30" RadiusY="30"/>
+                                                        </Image.Clip>
+                                                    </Image>
+                                                </Border>
+                                                <TextBlock Text="{Binding Nombre}" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="{Binding Rol}" Foreground="#888" FontSize="10" HorizontalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Grid>
                                     </Border>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
@@ -334,9 +333,18 @@
 
                                 <CheckBox x:Name="chkVisible" Content="Visible en Tienda" Foreground="White" IsChecked="True" Margin="0,0,0,15"/>
 
-                                <Button Content="GUARDAR JUEGO" Click="BtnGuardarJuego_Click" Height="40" Background="{StaticResource AccentColor}" Foreground="White" FontWeight="Bold" Margin="0,0,0,10"/>
-                                <Button Content="ELIMINAR JUEGO" Click="BtnEliminarJuego_Click" Height="30" Background="#D32F2F" Foreground="White" BorderThickness="0"/>
-                                <Button Content="LIMPIAR" Click="BtnLimpiarJuego_Click" Height="30" Background="Transparent" Foreground="#888" BorderThickness="0" Margin="0,5,0,0"/>
+                                <Button Content="➕ NUEVO JUEGO" Click="BtnLimpiarJuego_Click" Height="30" Background="#2E7D32" Foreground="White" FontWeight="Bold" Margin="0,0,0,10"/>
+
+                                <Button Content="GUARDAR" Click="BtnGuardarJuego_Click" Height="40" Background="{StaticResource AccentColor}" Foreground="White" FontWeight="Bold" Margin="0,0,0,10"/>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button Grid.Column="0" Content="LIMPIAR" Click="BtnLimpiarJuego_Click" Height="30" Background="#333" Foreground="#AAA" Margin="0,0,2,0"/>
+                                    <Button Grid.Column="1" Content="ELIMINAR" Click="BtnEliminarJuego_Click" Height="30" Background="#D32F2F" Foreground="White" Margin="2,0,0,0"/>
+                                </Grid>
                             </StackPanel>
                         </ScrollViewer>
                     </Border>

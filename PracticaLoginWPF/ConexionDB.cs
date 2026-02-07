@@ -3,11 +3,13 @@ using System;
 using System.Data;
 using System.Collections.Generic;
 using System.Windows;
+using System.IO;
 
 namespace PracticaLoginWPF
 {
     public class ConexionDB
     {
+        // Conexión limpia para entorno local
         private string connectionString = "Server=localhost;Database=NexusDB;Uid=root;Pwd=;";
 
         public MySqlConnection GetConnection()
@@ -16,8 +18,9 @@ namespace PracticaLoginWPF
         }
 
         // =============================================================
-        // 1. USUARIOS Y LOGIN
+        // 1. GESTIÓN DE LOGIN, REGISTRO Y USUARIOS
         // =============================================================
+
         public Usuario LoginUsuario(string nombre, string password)
         {
             using (MySqlConnection conn = GetConnection())
@@ -25,6 +28,7 @@ namespace PracticaLoginWPF
                 try
                 {
                     conn.Open();
+                    // IMPORTANTE: Seleccionamos * para traer también el campo 'avatar'
                     string query = "SELECT * FROM usuarios WHERE BINARY nombre = @u AND BINARY password = @p";
                     MySqlCommand cmd = new MySqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@u", nombre);
@@ -34,6 +38,10 @@ namespace PracticaLoginWPF
                     {
                         if (reader.Read())
                         {
+                            // NUEVO: Leemos los bytes de la imagen si existen
+                            byte[] avatarBytes = null;
+                            if (reader["avatar"] != DBNull.Value) avatarBytes = (byte[])reader["avatar"];
+
                             return new Usuario
                             {
                                 Id = reader.GetInt32("id"),
@@ -42,7 +50,8 @@ namespace PracticaLoginWPF
                                 FechaRegistro = reader.GetDateTime("fecha_registro").ToString("yyyy-MM-dd"),
                                 Rol = reader["rol"].ToString(),
                                 Email = reader["email"].ToString(),
-                                Estado = reader["estado"].ToString()
+                                Estado = reader["estado"].ToString(),
+                                Avatar = avatarBytes // ASIGNAMOS LA FOTO AQUÍ
                             };
                         }
                     }
@@ -50,6 +59,12 @@ namespace PracticaLoginWPF
                 catch { }
             }
             return null;
+        }
+
+        public bool RegistrarUsuario(string usuario, string password)
+        {
+            Usuario u = new Usuario { Nombre = usuario, Password = password, Rol = "user", Email = "", Estado = "activo" };
+            return CrearUsuarioAdmin(u);
         }
 
         public string ObtenerMotivoBan(string nombre)
@@ -86,8 +101,9 @@ namespace PracticaLoginWPF
         }
 
         // =============================================================
-        // 2. CRUD USUARIOS
+        // 2. CRUD USUARIOS (ADMIN)
         // =============================================================
+
         public List<Usuario> ObtenerUsuarios(string filtro = "")
         {
             List<Usuario> lista = new List<Usuario>();
@@ -143,7 +159,8 @@ namespace PracticaLoginWPF
                     cmd.Parameters.AddWithValue("@r", u.Rol);
                     cmd.Parameters.AddWithValue("@e", u.Email);
                     cmd.Parameters.AddWithValue("@s", u.Estado);
-                    return cmd.ExecuteNonQuery() > 0;
+                    cmd.ExecuteNonQuery();
+                    return true;
                 }
                 catch { return false; }
             }
@@ -164,13 +181,13 @@ namespace PracticaLoginWPF
                     cmd.Parameters.AddWithValue("@r", u.Rol);
                     cmd.Parameters.AddWithValue("@s", u.Estado);
                     cmd.Parameters.AddWithValue("@id", u.Id);
-                    return cmd.ExecuteNonQuery() > 0;
+                    cmd.ExecuteNonQuery();
+                    return true;
                 }
                 catch { return false; }
             }
         }
 
-        // MÉTODO SEGURO PARA QUE EL USUARIO EDITE SU PROPIO PERFIL
         public bool EditarPerfilUsuario(Usuario u)
         {
             using (MySqlConnection conn = GetConnection())
@@ -178,13 +195,13 @@ namespace PracticaLoginWPF
                 try
                 {
                     conn.Open();
-                    // Solo actualizamos email y password (el nombre a veces es mejor no tocarlo por temas de login, pero lo dejamos)
                     string query = "UPDATE usuarios SET password=@p, email=@e WHERE id=@id";
                     MySqlCommand cmd = new MySqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@p", u.Password);
                     cmd.Parameters.AddWithValue("@e", u.Email);
                     cmd.Parameters.AddWithValue("@id", u.Id);
-                    return cmd.ExecuteNonQuery() > 0;
+                    cmd.ExecuteNonQuery();
+                    return true;
                 }
                 catch { return false; }
             }
@@ -201,9 +218,14 @@ namespace PracticaLoginWPF
                     MySqlCommand cmd = new MySqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@img", imagenBytes);
                     cmd.Parameters.AddWithValue("@id", idUsuario);
-                    return cmd.ExecuteNonQuery() > 0;
+                    cmd.ExecuteNonQuery();
+                    return true;
                 }
-                catch { return false; }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error Avatar: " + ex.Message);
+                    return false;
+                }
             }
         }
 
@@ -217,7 +239,8 @@ namespace PracticaLoginWPF
                     string query = "UPDATE usuarios SET avatar = NULL WHERE id = @id";
                     MySqlCommand cmd = new MySqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@id", idUsuario);
-                    return cmd.ExecuteNonQuery() > 0;
+                    cmd.ExecuteNonQuery();
+                    return true;
                 }
                 catch { return false; }
             }
@@ -233,7 +256,8 @@ namespace PracticaLoginWPF
                     string query = "DELETE FROM usuarios WHERE id = @id";
                     MySqlCommand cmd = new MySqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@id", id);
-                    return cmd.ExecuteNonQuery() > 0;
+                    cmd.ExecuteNonQuery();
+                    return true;
                 }
                 catch { return false; }
             }
@@ -253,21 +277,17 @@ namespace PracticaLoginWPF
                     cmd.Parameters.AddWithValue("@s", estado);
                     cmd.Parameters.AddWithValue("@m", sqlMotivo);
                     cmd.Parameters.AddWithValue("@id", id);
-                    return cmd.ExecuteNonQuery() > 0;
+                    cmd.ExecuteNonQuery();
+                    return true;
                 }
                 catch { return false; }
             }
         }
 
-        public bool RegistrarUsuario(string usuario, string password)
-        {
-            Usuario u = new Usuario { Nombre = usuario, Password = password, Rol = "user", Email = "", Estado = "activo" };
-            return CrearUsuarioAdmin(u);
-        }
-
         // =============================================================
         // 3. LOGS, ESTADÍSTICAS Y APELACIONES
         // =============================================================
+
         public void RegistrarLog(string adminName, string tipoAccion, string usuarioAfectado)
         {
             using (MySqlConnection conn = GetConnection())
@@ -335,6 +355,7 @@ namespace PracticaLoginWPF
                     MySqlCommand cmdId = new MySqlCommand(queryId, conn);
                     cmdId.Parameters.AddWithValue("@u", usuario);
                     object result = cmdId.ExecuteScalar();
+
                     if (result != null)
                     {
                         int uid = Convert.ToInt32(result);
@@ -342,7 +363,8 @@ namespace PracticaLoginWPF
                         MySqlCommand cmd = new MySqlCommand(query, conn);
                         cmd.Parameters.AddWithValue("@uid", uid);
                         cmd.Parameters.AddWithValue("@txt", texto);
-                        return cmd.ExecuteNonQuery() > 0;
+                        cmd.ExecuteNonQuery();
+                        return true;
                     }
                     return false;
                 }
@@ -369,6 +391,7 @@ namespace PracticaLoginWPF
         // =============================================================
         // 4. JUEGOS, COMPRAS Y COMUNIDAD
         // =============================================================
+
         public List<Juego> ObtenerJuegos(bool esAdmin)
         {
             List<Juego> lista = new List<Juego>();
@@ -379,6 +402,7 @@ namespace PracticaLoginWPF
                     conn.Open();
                     string query = "SELECT * FROM juegos";
                     if (!esAdmin) query += " WHERE visible = TRUE";
+
                     MySqlCommand cmd = new MySqlCommand(query, conn);
                     using (MySqlDataReader reader = cmd.ExecuteReader())
                     {
@@ -386,6 +410,7 @@ namespace PracticaLoginWPF
                         {
                             byte[] imgBytes = null;
                             if (reader["caratula"] != DBNull.Value) imgBytes = (byte[])reader["caratula"];
+
                             lista.Add(new Juego
                             {
                                 Id = reader.GetInt32("id"),
@@ -399,7 +424,7 @@ namespace PracticaLoginWPF
                         }
                     }
                 }
-                catch { }
+                catch (Exception ex) { MessageBox.Show("Error Cargar Juegos: " + ex.Message); }
             }
             return lista;
         }
@@ -418,10 +443,16 @@ namespace PracticaLoginWPF
                     cmd.Parameters.AddWithValue("@p", j.Precio);
                     cmd.Parameters.AddWithValue("@d", j.Descripcion);
                     cmd.Parameters.AddWithValue("@v", j.Visible);
-                    cmd.Parameters.AddWithValue("@img", j.Caratula);
-                    return cmd.ExecuteNonQuery() > 0;
+
+                    if (j.Caratula != null && j.Caratula.Length > 0)
+                        cmd.Parameters.AddWithValue("@img", j.Caratula);
+                    else
+                        cmd.Parameters.AddWithValue("@img", DBNull.Value);
+
+                    cmd.ExecuteNonQuery();
+                    return true;
                 }
-                catch { return false; }
+                catch (Exception ex) { MessageBox.Show("Error Agregar Juego: " + ex.Message); return false; }
             }
         }
 
@@ -435,6 +466,7 @@ namespace PracticaLoginWPF
                     string query = "UPDATE juegos SET titulo=@t, genero=@g, precio=@p, descripcion=@d, visible=@v";
                     if (j.Caratula != null) query += ", caratula=@img";
                     query += " WHERE id=@id";
+
                     MySqlCommand cmd = new MySqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@t", j.Titulo);
                     cmd.Parameters.AddWithValue("@g", j.Genero);
@@ -442,10 +474,20 @@ namespace PracticaLoginWPF
                     cmd.Parameters.AddWithValue("@d", j.Descripcion);
                     cmd.Parameters.AddWithValue("@v", j.Visible);
                     cmd.Parameters.AddWithValue("@id", j.Id);
-                    if (j.Caratula != null) cmd.Parameters.AddWithValue("@img", j.Caratula);
-                    return cmd.ExecuteNonQuery() > 0;
+
+                    if (j.Caratula != null)
+                    {
+                        cmd.Parameters.AddWithValue("@img", j.Caratula);
+                    }
+
+                    cmd.ExecuteNonQuery();
+                    return true;
                 }
-                catch { return false; }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error Modificar Juego: " + ex.Message);
+                    return false;
+                }
             }
         }
 
@@ -459,7 +501,8 @@ namespace PracticaLoginWPF
                     string query = "DELETE FROM juegos WHERE id=@id";
                     MySqlCommand cmd = new MySqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@id", id);
-                    return cmd.ExecuteNonQuery() > 0;
+                    cmd.ExecuteNonQuery();
+                    return true;
                 }
                 catch { return false; }
             }
@@ -482,11 +525,12 @@ namespace PracticaLoginWPF
                     MySqlCommand cmd = new MySqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@u", idUsuario);
                     cmd.Parameters.AddWithValue("@j", idJuego);
-                    return cmd.ExecuteNonQuery() > 0;
+                    cmd.ExecuteNonQuery();
+                    return true;
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Error SQL CRÍTICO: " + ex.Message);
+                    MessageBox.Show("Error SQL Compra: " + ex.Message);
                     return false;
                 }
             }
@@ -503,12 +547,14 @@ namespace PracticaLoginWPF
                     string query = "SELECT j.* FROM juegos j JOIN biblioteca b ON j.id = b.id_juego WHERE b.id_usuario = @u";
                     MySqlCommand cmd = new MySqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@u", idUsuario);
+
                     using (MySqlDataReader reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
                         {
                             byte[] imgBytes = null;
                             if (reader["caratula"] != DBNull.Value) imgBytes = (byte[])reader["caratula"];
+
                             misJuegos.Add(new Juego
                             {
                                 Id = reader.GetInt32("id"),
@@ -538,7 +584,8 @@ namespace PracticaLoginWPF
                     MySqlCommand cmd = new MySqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@u", idUsuario);
                     cmd.Parameters.AddWithValue("@m", texto);
-                    return cmd.ExecuteNonQuery() > 0;
+                    cmd.ExecuteNonQuery();
+                    return true;
                 }
                 catch { return false; }
             }

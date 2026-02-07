@@ -26,6 +26,7 @@ namespace PracticaLoginWPF
         public HomeWindow()
         {
             InitializeComponent();
+
             this.KeyDown += HomeWindow_KeyDown;
 
             if (Sesion.UsuarioActual != null)
@@ -47,6 +48,9 @@ namespace PracticaLoginWPF
             }
         }
 
+        // ===============================================
+        // CARGA DE DATOS 
+        // ===============================================
         private void CargarCatalogo()
         {
             try
@@ -56,7 +60,7 @@ namespace PracticaLoginWPF
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error al conectar con el servidor: " + ex.Message);
+                NexusMessageBox.Show("Error al conectar con el servidor: " + ex.Message);
             }
         }
 
@@ -66,109 +70,7 @@ namespace PracticaLoginWPF
         }
 
         // ===============================================
-        // LÓGICA DEL PERFIL (NUEVO DISEÑO)
-        // ===============================================
-        private void CargarPerfil()
-        {
-            // Llenar los datos de la izquierda (Barra lateral)
-            lblPerfilUser.Text = Sesion.UsuarioActual.Nombre;
-            lblPerfilRol.Text = Sesion.UsuarioActual.Rol.ToUpper(); // EJ: ADMIN
-            lblPerfilFecha.Text = "Miembro desde: " + Sesion.UsuarioActual.FechaRegistro;
-
-            // Llenar formulario derecha
-            txtEmailPerfil.Text = Sesion.UsuarioActual.Email;
-
-            // Limpiar campos de contraseña por seguridad
-            txtPassActual.Text = "";
-            txtPassNueva.Text = "";
-
-            // Cargar avatar
-            if (Sesion.UsuarioActual.AvatarImage != null)
-            {
-                imgPerfilUser.ImageSource = Sesion.UsuarioActual.AvatarImage;
-            }
-            else
-            {
-                imgPerfilUser.ImageSource = new BitmapImage(new Uri("pack://application:,,,/Assets/logo.ico"));
-            }
-        }
-
-        private void BtnSubirFotoPerfil_Click(object sender, RoutedEventArgs e)
-        {
-            OpenFileDialog op = new OpenFileDialog();
-            op.Title = "Seleccionar avatar";
-            op.Filter = "Imágenes|*.jpg;*.jpeg;*.png";
-            if (op.ShowDialog() == true)
-            {
-                try
-                {
-                    byte[] imgBytes = File.ReadAllBytes(op.FileName);
-                    if (db.ActualizarAvatar(userId, imgBytes))
-                    {
-                        Sesion.UsuarioActual.Avatar = imgBytes;
-                        imgPerfilUser.ImageSource = new BitmapImage(new Uri(op.FileName));
-                        MessageBox.Show("Avatar actualizado correctamente.");
-                    }
-                }
-                catch { MessageBox.Show("Error al subir la imagen."); }
-            }
-        }
-
-        private void BtnGuardarPerfil_Click(object sender, RoutedEventArgs e)
-        {
-            // 1. Validar contraseña actual si quiere cambiar algo sensible
-            if (!string.IsNullOrEmpty(txtPassActual.Text))
-            {
-                if (txtPassActual.Text != Sesion.UsuarioActual.Password)
-                {
-                    MessageBox.Show("La contraseña actual no es correcta.", "Error de seguridad");
-                    return;
-                }
-            }
-            else
-            {
-                // Si no escribe la actual, le avisamos (opcional, pero recomendado)
-                if (!string.IsNullOrEmpty(txtPassNueva.Text))
-                {
-                    MessageBox.Show("Para cambiar la contraseña, debes confirmar la actual primero.");
-                    return;
-                }
-            }
-
-            // 2. Determinar qué contraseña guardar (Nueva o la que ya tenía)
-            string passwordFinal = string.IsNullOrEmpty(txtPassNueva.Text) ? Sesion.UsuarioActual.Password : txtPassNueva.Text;
-
-            Usuario u = new Usuario
-            {
-                Id = userId,
-                // El nombre lo dejamos igual para no romper logins, o podríamos permitir cambiarlo
-                Nombre = Sesion.UsuarioActual.Nombre,
-                Email = txtEmailPerfil.Text,
-                Password = passwordFinal
-            };
-
-            if (db.EditarPerfilUsuario(u))
-            {
-                Sesion.UsuarioActual.Email = u.Email;
-                Sesion.UsuarioActual.Password = u.Password;
-                MessageBox.Show("Perfil actualizado con éxito.");
-                txtPassActual.Text = "";
-                txtPassNueva.Text = "";
-            }
-            else
-            {
-                MessageBox.Show("Error al guardar cambios.");
-            }
-        }
-
-        private void BtnCerrarPerfil_Click(object sender, RoutedEventArgs e)
-        {
-            // Al cerrar, volvemos a la biblioteca o catálogo
-            CambiarPantalla(GridLibrary);
-        }
-
-        // ===============================================
-        // LÓGICA DEL CARRITO
+        // CARRITO Y PAGOS
         // ===============================================
         private void ActualizarContadorCarrito()
         {
@@ -202,7 +104,7 @@ namespace PracticaLoginWPF
         {
             if (carrito.Count == 0) return;
 
-            if (MessageBox.Show($"¿Pagar un total de {txtTotal.Text}?", "Confirmar Pago", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+            if (MessageBox.Show($"¿Pagar un total de {txtTotal.Text}?", "Confirmar Pago", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
                 bool error = false;
                 foreach (var j in carrito)
@@ -213,7 +115,8 @@ namespace PracticaLoginWPF
 
                 if (!error)
                 {
-                    MessageBox.Show("¡Compra realizada con éxito!", "Nexus Store");
+                    NexusMessageBox.Show("¡Compra realizada con éxito!\nYa tienes los juegos en tu biblioteca.");
+
                     carrito.Clear();
                     ActualizarContadorCarrito();
                     CargarCarrito();
@@ -222,10 +125,93 @@ namespace PracticaLoginWPF
                 }
                 else
                 {
-                    MessageBox.Show("Hubo algún problema con uno o más juegos.");
+                    NexusMessageBox.Show("Hubo un error al procesar algunos juegos.");
                 }
             }
         }
+
+        // ===============================================
+        // DETALLES Y BOTONES (JUGAR / COMPRAR)
+        // ===============================================
+        private void Juego_Click(object sender, MouseButtonEventArgs e)
+        {
+            var gridJuego = sender as Grid;
+            juegoSeleccionado = gridJuego.DataContext as Juego;
+
+            if (juegoSeleccionado != null)
+            {
+                txtTitulo.Text = juegoSeleccionado.Titulo;
+                txtGenero.Text = juegoSeleccionado.Genero;
+                txtPrecio.Text = juegoSeleccionado.PrecioFormato;
+                txtDesc.Text = juegoSeleccionado.Descripcion;
+
+                if (juegoSeleccionado.CaratulaImagen != null) BrushDetalle.ImageSource = juegoSeleccionado.CaratulaImagen;
+                else BrushDetalle.ImageSource = new BitmapImage(new Uri("pack://application:,,,/Assets/logo.ico"));
+
+                // ESTADO DEL BOTÓN
+                bool yaLoTengo = misJuegos.Any(j => j.Id == juegoSeleccionado.Id);
+                bool enCarrito = carrito.Any(j => j.Id == juegoSeleccionado.Id);
+
+                if (yaLoTengo)
+                {
+                    ConfigurarBotonJugar();
+                }
+                else if (enCarrito)
+                {
+                    // TRUCO VISUAL: Lo dejamos habilitado (true) para que se vea el color,
+                    // pero controlamos el click para que no haga nada.
+                    btnAccion.Content = "✓ EN EL CARRITO";
+                    btnAccion.IsEnabled = true;
+                    btnAccion.Background = new SolidColorBrush(Color.FromRgb(69, 39, 160)); // Morado oscuro
+                }
+                else
+                {
+                    btnAccion.Content = "AÑADIR AL CARRITO";
+                    btnAccion.IsEnabled = true;
+                    btnAccion.Background = (SolidColorBrush)Application.Current.Resources["AccentColor"];
+                }
+
+                CambiarPantalla(GridDetails);
+            }
+        }
+
+        private void ConfigurarBotonJugar()
+        {
+            btnAccion.Content = "▶ JUGAR";
+            btnAccion.IsEnabled = true;
+            btnAccion.Background = new SolidColorBrush(Color.FromRgb(0, 200, 83)); // Verde
+        }
+
+        private void BtnAccion_Click(object sender, RoutedEventArgs e)
+        {
+            // SI YA ESTÁ EN EL CARRITO, NO HACEMOS NADA (Así evitamos duplicados aunque el botón esté activo)
+            if (btnAccion.Content.ToString().Contains("✓")) return;
+
+            // --- CASO 1: JUGAR ---
+            if (btnAccion.Content.ToString().Contains("JUGAR"))
+            {
+                GameLauncherWindow launcher = new GameLauncherWindow(juegoSeleccionado);
+                launcher.ShowDialog();
+                return;
+            }
+
+            // --- CASO 2: AÑADIR AL CARRITO ---
+            if (!carrito.Contains(juegoSeleccionado))
+            {
+                carrito.Add(juegoSeleccionado);
+                ActualizarContadorCarrito();
+
+                NexusMessageBox.Show($"¡{juegoSeleccionado.Titulo} añadido al carrito!");
+
+                // ACTUALIZACIÓN VISUAL: Mantenemos IsEnabled = true para preservar el color morado
+                btnAccion.Content = "✓ EN EL CARRITO";
+                btnAccion.IsEnabled = true;
+                btnAccion.Background = new SolidColorBrush(Color.FromRgb(69, 39, 160));
+            }
+        }
+
+        private void BtnVolver_Click(object sender, RoutedEventArgs e) => CambiarPantalla(GridLibrary);
+
 
         // ===============================================
         // COMUNIDAD
@@ -247,6 +233,85 @@ namespace PracticaLoginWPF
             if (string.IsNullOrEmpty(texto)) return;
             if (db.EnviarMensaje(userId, texto)) { txtMensajeChat.Text = ""; CargarComunidad(); }
         }
+
+        // ===============================================
+        // PERFIL
+        // ===============================================
+        private void CargarPerfil()
+        {
+            lblPerfilUser.Text = Sesion.UsuarioActual.Nombre;
+            lblPerfilRol.Text = Sesion.UsuarioActual.Rol.ToUpper();
+            lblPerfilFecha.Text = "Miembro desde: " + Sesion.UsuarioActual.FechaRegistro;
+            txtEmailPerfil.Text = Sesion.UsuarioActual.Email;
+            txtPassActual.Text = "";
+            txtPassNueva.Text = "";
+
+            if (Sesion.UsuarioActual.AvatarImage != null)
+                imgPerfilUser.ImageSource = Sesion.UsuarioActual.AvatarImage;
+            else
+                imgPerfilUser.ImageSource = new BitmapImage(new Uri("pack://application:,,,/Assets/logo.ico"));
+        }
+
+        private void BtnSubirFotoPerfil_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog op = new OpenFileDialog { Filter = "Imágenes|*.jpg;*.jpeg;*.png" };
+            if (op.ShowDialog() == true)
+            {
+                try
+                {
+                    byte[] imgBytes = File.ReadAllBytes(op.FileName);
+                    if (db.ActualizarAvatar(userId, imgBytes))
+                    {
+                        Sesion.UsuarioActual.Avatar = imgBytes;
+                        imgPerfilUser.ImageSource = new BitmapImage(new Uri(op.FileName));
+                        NexusMessageBox.Show("Avatar actualizado correctamente.");
+                    }
+                }
+                catch { NexusMessageBox.Show("Error al subir la imagen."); }
+            }
+        }
+
+        private void BtnGuardarPerfil_Click(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(txtPassActual.Text))
+            {
+                if (txtPassActual.Text != Sesion.UsuarioActual.Password)
+                {
+                    NexusMessageBox.Show("La contraseña actual no es correcta.");
+                    return;
+                }
+            }
+            else if (!string.IsNullOrEmpty(txtPassNueva.Text))
+            {
+                NexusMessageBox.Show("Debes confirmar tu contraseña actual para cambiarla.");
+                return;
+            }
+
+            string passwordFinal = string.IsNullOrEmpty(txtPassNueva.Text) ? Sesion.UsuarioActual.Password : txtPassNueva.Text;
+
+            Usuario u = new Usuario
+            {
+                Id = userId,
+                Nombre = Sesion.UsuarioActual.Nombre,
+                Email = txtEmailPerfil.Text,
+                Password = passwordFinal
+            };
+
+            if (db.EditarPerfilUsuario(u))
+            {
+                Sesion.UsuarioActual.Email = u.Email;
+                Sesion.UsuarioActual.Password = u.Password;
+                NexusMessageBox.Show("Perfil actualizado con éxito.");
+                txtPassActual.Text = "";
+                txtPassNueva.Text = "";
+            }
+            else
+            {
+                NexusMessageBox.Show("Error al guardar cambios.");
+            }
+        }
+
+        private void BtnCerrarPerfil_Click(object sender, RoutedEventArgs e) => CambiarPantalla(GridLibrary);
 
         // ===============================================
         // NAVEGACIÓN
@@ -280,76 +345,6 @@ namespace PracticaLoginWPF
             DoubleAnimation fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromSeconds(0.4));
             nuevaPantalla.BeginAnimation(UIElement.OpacityProperty, fadeIn);
         }
-
-        // ===============================================
-        // DETALLES Y AÑADIR AL CARRITO
-        // ===============================================
-        private void Juego_Click(object sender, MouseButtonEventArgs e)
-        {
-            var gridJuego = sender as Grid;
-            juegoSeleccionado = gridJuego.DataContext as Juego;
-
-            if (juegoSeleccionado != null)
-            {
-                txtTitulo.Text = juegoSeleccionado.Titulo;
-                txtGenero.Text = juegoSeleccionado.Genero;
-                txtPrecio.Text = juegoSeleccionado.PrecioFormato;
-                txtDesc.Text = juegoSeleccionado.Descripcion;
-
-                if (juegoSeleccionado.CaratulaImagen != null) BrushDetalle.ImageSource = juegoSeleccionado.CaratulaImagen;
-                else BrushDetalle.ImageSource = new BitmapImage(new Uri("pack://application:,,,/Assets/logo.ico"));
-
-                bool yaLoTengo = misJuegos.Any(j => j.Id == juegoSeleccionado.Id);
-                bool enCarrito = carrito.Any(j => j.Id == juegoSeleccionado.Id);
-
-                if (yaLoTengo)
-                {
-                    ConfigurarBotonJugar();
-                }
-                else if (enCarrito)
-                {
-                    btnAccion.Content = "EN EL CARRITO";
-                    btnAccion.IsEnabled = false;
-                    btnAccion.Background = Brushes.Gray;
-                }
-                else
-                {
-                    btnAccion.Content = "AÑADIR AL CARRITO";
-                    btnAccion.IsEnabled = true;
-                    btnAccion.Background = (SolidColorBrush)Application.Current.Resources["AccentColor"];
-                }
-
-                CambiarPantalla(GridDetails);
-            }
-        }
-
-        private void ConfigurarBotonJugar()
-        {
-            btnAccion.Content = "▶ JUGAR";
-            btnAccion.IsEnabled = true;
-            btnAccion.Background = new SolidColorBrush(Color.FromRgb(0, 200, 83));
-        }
-
-        private void BtnAccion_Click(object sender, RoutedEventArgs e)
-        {
-            if (btnAccion.Content.ToString().Contains("JUGAR"))
-            {
-                MessageBox.Show($"Iniciando {juegoSeleccionado.Titulo}...", "NEXUS");
-                return;
-            }
-
-            if (!carrito.Contains(juegoSeleccionado))
-            {
-                carrito.Add(juegoSeleccionado);
-                ActualizarContadorCarrito();
-                MessageBox.Show("Añadido al carrito");
-                btnAccion.Content = "EN EL CARRITO";
-                btnAccion.IsEnabled = false;
-                btnAccion.Background = Brushes.Gray;
-            }
-        }
-
-        private void BtnVolver_Click(object sender, RoutedEventArgs e) => CambiarPantalla(GridLibrary);
 
         private void CmbFiltro_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -413,6 +408,14 @@ namespace PracticaLoginWPF
         private void BtnCerrarApp_Click(object sender, RoutedEventArgs e) => Application.Current.Shutdown();
         private void BtnCerrarSesion_Click(object sender, RoutedEventArgs e) { Sesion.Cerrar(); new MainWindow().Show(); this.Close(); }
         private void BtnAdmin_Click(object sender, RoutedEventArgs e) { this.Hide(); new AdminWindow().ShowDialog(); this.Show(); CargarCatalogo(); }
-        private void HomeWindow_KeyDown(object sender, KeyEventArgs e) { if (e.Key == Key.F1) new HelpWindow().ShowDialog(); }
+
+        private void HomeWindow_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.F1)
+            {
+                HelpWindow ayuda = new HelpWindow();
+                ayuda.ShowDialog();
+            }
+        }
     }
 }
