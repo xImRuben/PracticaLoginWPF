@@ -406,6 +406,21 @@ namespace PracticaLoginWPF
         private void BtnCerrarApp_Click(object sender, RoutedEventArgs e) => Application.Current.Shutdown();
         private void BtnCerrarSesion_Click(object sender, RoutedEventArgs e) { Sesion.Cerrar(); new MainWindow().Show(); this.Close(); }
         private void BtnAdmin_Click(object sender, RoutedEventArgs e) { this.Hide(); new AdminWindow().ShowDialog(); this.Show(); CargarCatalogo(); }
-        private void HomeWindow_KeyDown(object sender, KeyEventArgs e) { if (e.Key == Key.F1) { HelpWindow ayuda = new HelpWindow(); ayuda.ShowDialog(); } }
+
+        // --- ESTE ES EL MÉTODO QUE FALTABA ---
+        private void BtnAyuda_Click(object sender, RoutedEventArgs e)
+        {
+            HelpWindow ayuda = new HelpWindow();
+            ayuda.ShowDialog();
+        }
+
+        private void HomeWindow_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.F1)
+            {
+                HelpWindow ayuda = new HelpWindow();
+                ayuda.ShowDialog();
+            }
+        }
     }
 }
