@@ -1,48 +1,59 @@
 ﻿using System;
-using System.IO;
-using System.Windows.Media;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 
 namespace PracticaLoginWPF
 {
+    // 1. CLASE USUARIO
     public class Usuario
     {
         public int Id { get; set; }
         public string Nombre { get; set; }
         public string Password { get; set; }
-        public string FechaRegistro { get; set; }
         public string Rol { get; set; }
         public string Email { get; set; }
-        public string Estado { get; set; } // "activo" o "baneado"
+        public string FechaRegistro { get; set; }
+        public string Estado { get; set; } // 'activo' o 'baneado'
+        public decimal Saldo { get; set; }
         public byte[] Avatar { get; set; }
 
-        // --- NUEVO: Propiedad para el dinero ---
-        public decimal Saldo { get; set; }
-
-        public ImageSource AvatarImage
+        public BitmapImage AvatarImage
         {
-            get
-            {
-                if (Avatar == null || Avatar.Length == 0) return null;
-                try
-                {
-                    var bi = new BitmapImage();
-                    bi.BeginInit();
-                    bi.StreamSource = new MemoryStream(Avatar);
-                    bi.CacheOption = BitmapCacheOption.OnLoad;
-                    bi.EndInit();
-                    return bi;
-                }
-                catch { return null; }
-            }
+            get { return ConexionDB.ConvertirImagen(Avatar); }
+        }
+
+        // AQUÍ ESTÁ EL CAMBIO: Se llama 'ColorEstado' para coincidir con TU diseño
+        public string ColorEstado
+        {
+            get { return Estado == "activo" ? "#00E676" : "#FF5252"; } // Verde o Rojo
+        }
+    }
+
+    // 2. CLASE AMIGO
+    public class Amigo
+    {
+        public int Id { get; set; }
+        public int IdSolicitud { get; set; }
+        public string Nombre { get; set; }
+        public bool IsOnline { get; set; }
+        public byte[] Avatar { get; set; }
+
+        public BitmapImage AvatarImagen
+        {
+            get { return ConexionDB.ConvertirImagen(Avatar); }
         }
 
         public string ColorEstado
         {
-            get
-            {
-                return (Estado == "baneado") ? "#FF5252" : "#00E676";
-            }
+            get { return IsOnline ? "#00E676" : "#666666"; }
+        }
+
+        public string TextoEstado
+        {
+            get { return IsOnline ? "Online" : "Offline"; }
         }
     }
 }

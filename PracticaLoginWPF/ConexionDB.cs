@@ -4,6 +4,7 @@ using System.Data;
 using System.Collections.Generic;
 using System.Windows;
 using System.IO;
+using System.Windows.Media.Imaging;
 
 namespace PracticaLoginWPF
 {
@@ -14,6 +15,26 @@ namespace PracticaLoginWPF
         public MySqlConnection GetConnection()
         {
             return new MySqlConnection(connectionString);
+        }
+
+        // Helper estático para imágenes
+        public static BitmapImage ConvertirImagen(byte[] imagenBytes)
+        {
+            if (imagenBytes == null || imagenBytes.Length == 0) return null;
+            try
+            {
+                using (var stream = new MemoryStream(imagenBytes))
+                {
+                    var image = new BitmapImage();
+                    image.BeginInit();
+                    image.CreateOptions = BitmapCreateOptions.PreservePixelFormat;
+                    image.CacheOption = BitmapCacheOption.OnLoad;
+                    image.StreamSource = stream;
+                    image.EndInit();
+                    return image;
+                }
+            }
+            catch { return null; }
         }
 
         // =============================================================
@@ -38,7 +59,6 @@ namespace PracticaLoginWPF
                         {
                             byte[] avatarBytes = null;
                             if (reader["avatar"] != DBNull.Value) avatarBytes = (byte[])reader["avatar"];
-
                             decimal saldo = 0;
                             if (reader["saldo"] != DBNull.Value) saldo = reader.GetDecimal("saldo");
 
@@ -109,7 +129,6 @@ namespace PracticaLoginWPF
                         {
                             byte[] avatarBytes = null;
                             if (reader["avatar"] != DBNull.Value) avatarBytes = (byte[])reader["avatar"];
-
                             decimal saldo = 0;
                             if (reader["saldo"] != DBNull.Value) saldo = reader.GetDecimal("saldo");
 
@@ -308,7 +327,7 @@ namespace PracticaLoginWPF
         }
 
         // =============================================================
-        // 3. JUEGOS Y VALORACIONES
+        // 3. JUEGOS Y CATALOGO
         // =============================================================
 
         public List<Juego> ObtenerJuegos(bool esAdmin)
@@ -329,7 +348,6 @@ namespace PracticaLoginWPF
                         {
                             byte[] imgBytes = null;
                             if (reader["caratula"] != DBNull.Value) imgBytes = (byte[])reader["caratula"];
-
                             int val = 5;
                             if (reader["valoracion"] != DBNull.Value) val = reader.GetInt32("valoracion");
 
@@ -366,11 +384,8 @@ namespace PracticaLoginWPF
                     cmd.Parameters.AddWithValue("@p", j.Precio);
                     cmd.Parameters.AddWithValue("@d", j.Descripcion);
                     cmd.Parameters.AddWithValue("@v", j.Visible);
-
-                    if (j.Caratula != null && j.Caratula.Length > 0)
-                        cmd.Parameters.AddWithValue("@img", j.Caratula);
-                    else
-                        cmd.Parameters.AddWithValue("@img", DBNull.Value);
+                    if (j.Caratula != null && j.Caratula.Length > 0) cmd.Parameters.AddWithValue("@img", j.Caratula);
+                    else cmd.Parameters.AddWithValue("@img", DBNull.Value);
 
                     cmd.ExecuteNonQuery();
                     return true;
@@ -389,7 +404,6 @@ namespace PracticaLoginWPF
                     string query = "UPDATE juegos SET titulo=@t, genero=@g, precio=@p, descripcion=@d, visible=@v";
                     if (j.Caratula != null) query += ", caratula=@img";
                     query += " WHERE id=@id";
-
                     MySqlCommand cmd = new MySqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@t", j.Titulo);
                     cmd.Parameters.AddWithValue("@g", j.Genero);
@@ -397,20 +411,11 @@ namespace PracticaLoginWPF
                     cmd.Parameters.AddWithValue("@d", j.Descripcion);
                     cmd.Parameters.AddWithValue("@v", j.Visible);
                     cmd.Parameters.AddWithValue("@id", j.Id);
-
-                    if (j.Caratula != null)
-                    {
-                        cmd.Parameters.AddWithValue("@img", j.Caratula);
-                    }
-
+                    if (j.Caratula != null) cmd.Parameters.AddWithValue("@img", j.Caratula);
                     cmd.ExecuteNonQuery();
                     return true;
                 }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Error Modificar Juego: " + ex.Message);
-                    return false;
-                }
+                catch (Exception ex) { MessageBox.Show("Error Modificar Juego: " + ex.Message); return false; }
             }
         }
 
@@ -451,11 +456,7 @@ namespace PracticaLoginWPF
                     cmd.ExecuteNonQuery();
                     return true;
                 }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Error SQL Compra: " + ex.Message);
-                    return false;
-                }
+                catch (Exception ex) { MessageBox.Show("Error SQL Compra: " + ex.Message); return false; }
             }
         }
 
@@ -470,14 +471,12 @@ namespace PracticaLoginWPF
                     string query = "SELECT j.* FROM juegos j JOIN biblioteca b ON j.id = b.id_juego WHERE b.id_usuario = @u";
                     MySqlCommand cmd = new MySqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@u", idUsuario);
-
                     using (MySqlDataReader reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
                         {
                             byte[] imgBytes = null;
                             if (reader["caratula"] != DBNull.Value) imgBytes = (byte[])reader["caratula"];
-
                             int val = 5;
                             if (reader["valoracion"] != DBNull.Value) val = reader.GetInt32("valoracion");
 
@@ -501,7 +500,7 @@ namespace PracticaLoginWPF
         }
 
         // =============================================================
-        // 4. OTROS (LOGS, CHAT, APELACIONES)
+        // 4. LOGS, CHAT, ESTADISTICAS
         // =============================================================
 
         public void RegistrarLog(string adminName, string tipoAccion, string usuarioAfectado)
@@ -571,7 +570,6 @@ namespace PracticaLoginWPF
                     MySqlCommand cmdId = new MySqlCommand(queryId, conn);
                     cmdId.Parameters.AddWithValue("@u", usuario);
                     object result = cmdId.ExecuteScalar();
-
                     if (result != null)
                     {
                         int uid = Convert.ToInt32(result);
@@ -674,7 +672,7 @@ namespace PracticaLoginWPF
         }
 
         // =============================================================
-        // 5. GESTIÓN DEL CARRITO (PERSISTENCIA BBDD) - NUEVO
+        // 5. CARRITO Y AMIGOS
         // =============================================================
 
         public List<Juego> ObtenerCarrito(int idUsuario)
@@ -685,21 +683,17 @@ namespace PracticaLoginWPF
                 try
                 {
                     conn.Open();
-                    // Unimos juegos y carrito
                     string query = "SELECT j.* FROM juegos j INNER JOIN carrito c ON j.id = c.id_juego WHERE c.id_usuario = @u";
                     MySqlCommand cmd = new MySqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@u", idUsuario);
-
                     using (MySqlDataReader reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
                         {
                             byte[] imgBytes = null;
                             if (reader["caratula"] != DBNull.Value) imgBytes = (byte[])reader["caratula"];
-
                             int val = 5;
                             if (reader["valoracion"] != DBNull.Value) val = reader.GetInt32("valoracion");
-
                             lista.Add(new Juego
                             {
                                 Id = reader.GetInt32("id"),
@@ -743,7 +737,6 @@ namespace PracticaLoginWPF
                 try
                 {
                     conn.Open();
-                    // LIMIT 1 para asegurar que solo borra una instancia si hubiera duplicados
                     string query = "DELETE FROM carrito WHERE id_usuario = @u AND id_juego = @j LIMIT 1";
                     MySqlCommand cmd = new MySqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@u", idUsuario);
@@ -764,6 +757,159 @@ namespace PracticaLoginWPF
                     string query = "DELETE FROM carrito WHERE id_usuario = @u";
                     MySqlCommand cmd = new MySqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@u", idUsuario);
+                    cmd.ExecuteNonQuery();
+                }
+                catch { }
+            }
+        }
+
+        public void SetOnlineStatus(int userId, bool online)
+        {
+            using (MySqlConnection conn = GetConnection())
+            {
+                try
+                {
+                    conn.Open();
+                    string query = "UPDATE usuarios SET is_online = @s WHERE id = @id";
+                    MySqlCommand cmd = new MySqlCommand(query, conn);
+                    cmd.Parameters.AddWithValue("@s", online);
+                    cmd.Parameters.AddWithValue("@id", userId);
+                    cmd.ExecuteNonQuery();
+                }
+                catch { }
+            }
+        }
+
+        public string EnviarSolicitudAmistad(int idEmisor, string nombreReceptor)
+        {
+            using (MySqlConnection conn = GetConnection())
+            {
+                try
+                {
+                    conn.Open();
+                    string queryId = "SELECT id FROM usuarios WHERE nombre = @n";
+                    MySqlCommand cmdId = new MySqlCommand(queryId, conn);
+                    cmdId.Parameters.AddWithValue("@n", nombreReceptor);
+                    object res = cmdId.ExecuteScalar();
+                    if (res == null) return "Usuario no encontrado.";
+                    int idReceptor = Convert.ToInt32(res);
+                    if (idReceptor == idEmisor) return "No puedes añadirte a ti mismo.";
+                    string check = "SELECT COUNT(*) FROM amigos WHERE (id_usuario1=@u1 AND id_usuario2=@u2) OR (id_usuario1=@u2 AND id_usuario2=@u1)";
+                    MySqlCommand cmdCheck = new MySqlCommand(check, conn);
+                    cmdCheck.Parameters.AddWithValue("@u1", idEmisor);
+                    cmdCheck.Parameters.AddWithValue("@u2", idReceptor);
+                    if (Convert.ToInt32(cmdCheck.ExecuteScalar()) > 0) return "Ya existe una solicitud o amistad.";
+                    string insert = "INSERT INTO amigos (id_usuario1, id_usuario2, estado) VALUES (@u1, @u2, 'pendiente')";
+                    MySqlCommand cmdInsert = new MySqlCommand(insert, conn);
+                    cmdInsert.Parameters.AddWithValue("@u1", idEmisor);
+                    cmdInsert.Parameters.AddWithValue("@u2", idReceptor);
+                    cmdInsert.ExecuteNonQuery();
+                    return "Solicitud enviada a " + nombreReceptor;
+                }
+                catch (Exception ex) { return "Error: " + ex.Message; }
+            }
+        }
+
+        public List<Amigo> ObtenerListaAmigos(int myId)
+        {
+            List<Amigo> lista = new List<Amigo>();
+            using (MySqlConnection conn = GetConnection())
+            {
+                try
+                {
+                    conn.Open();
+                    string query = @"SELECT u.id, u.nombre, u.avatar, u.is_online FROM usuarios u JOIN amigos a ON (u.id = a.id_usuario1 OR u.id = a.id_usuario2) WHERE (a.id_usuario1 = @myId OR a.id_usuario2 = @myId) AND u.id != @myId AND a.estado = 'aceptado'";
+                    MySqlCommand cmd = new MySqlCommand(query, conn);
+                    cmd.Parameters.AddWithValue("@myId", myId);
+                    using (MySqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            byte[] ava = null;
+                            if (reader["avatar"] != DBNull.Value) ava = (byte[])reader["avatar"];
+                            bool online = false;
+                            if (reader["is_online"] != DBNull.Value) online = reader.GetBoolean("is_online");
+                            lista.Add(new Amigo { Id = reader.GetInt32("id"), Nombre = reader.GetString("nombre"), IsOnline = online, Avatar = ava });
+                        }
+                    }
+                }
+                catch { }
+            }
+            return lista;
+        }
+
+        public List<Amigo> ObtenerSolicitudesPendientes(int myId)
+        {
+            List<Amigo> lista = new List<Amigo>();
+            using (MySqlConnection conn = GetConnection())
+            {
+                try
+                {
+                    conn.Open();
+                    string query = @"SELECT u.id, u.nombre, u.avatar, a.id as id_solicitud FROM usuarios u JOIN amigos a ON u.id = a.id_usuario1 WHERE a.id_usuario2 = @myId AND a.estado = 'pendiente'";
+                    MySqlCommand cmd = new MySqlCommand(query, conn);
+                    cmd.Parameters.AddWithValue("@myId", myId);
+                    using (MySqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            byte[] ava = null;
+                            if (reader["avatar"] != DBNull.Value) ava = (byte[])reader["avatar"];
+                            lista.Add(new Amigo { Id = reader.GetInt32("id"), IdSolicitud = reader.GetInt32("id_solicitud"), Nombre = reader.GetString("nombre"), Avatar = ava });
+                        }
+                    }
+                }
+                catch { }
+            }
+            return lista;
+        }
+
+        public void AceptarSolicitud(int idSolicitud)
+        {
+            using (MySqlConnection conn = GetConnection())
+            {
+                try
+                {
+                    conn.Open();
+                    string query = "UPDATE amigos SET estado='aceptado' WHERE id=@id";
+                    MySqlCommand cmd = new MySqlCommand(query, conn);
+                    cmd.Parameters.AddWithValue("@id", idSolicitud);
+                    cmd.ExecuteNonQuery();
+                }
+                catch { }
+            }
+        }
+
+        // Método para RECHAZAR solicitud (Borrarla)
+        public void RechazarSolicitud(int idSolicitud)
+        {
+            using (MySqlConnection conn = GetConnection())
+            {
+                try
+                {
+                    conn.Open();
+                    string query = "DELETE FROM amigos WHERE id=@id";
+                    MySqlCommand cmd = new MySqlCommand(query, conn);
+                    cmd.Parameters.AddWithValue("@id", idSolicitud);
+                    cmd.ExecuteNonQuery();
+                }
+                catch { }
+            }
+        }
+
+        // Método para ELIMINAR A UN AMIGO (Ya confirmado)
+        public void EliminarAmigo(int miId, int idAmigo)
+        {
+            using (MySqlConnection conn = GetConnection())
+            {
+                try
+                {
+                    conn.Open();
+                    // Borramos la relación en ambas direcciones por si acaso
+                    string query = "DELETE FROM amigos WHERE (id_usuario1=@u1 AND id_usuario2=@u2) OR (id_usuario1=@u2 AND id_usuario2=@u1)";
+                    MySqlCommand cmd = new MySqlCommand(query, conn);
+                    cmd.Parameters.AddWithValue("@u1", miId);
+                    cmd.Parameters.AddWithValue("@u2", idAmigo);
                     cmd.ExecuteNonQuery();
                 }
                 catch { }

@@ -325,7 +325,7 @@
                         <ScrollViewer x:Name="MainScroll" VerticalScrollBarVisibility="Hidden" Margin="30,10,30,30">
                             <StackPanel>
 
-                                <Border x:Name="BorderBanner" Height="380" CornerRadius="12" Margin="0,0,0,40">
+                                <Border x:Name="BorderBanner" Height="380" CornerRadius="12" Margin="0,0,0,40" RenderOptions.BitmapScalingMode="HighQuality">
                                     <Border.Background>
                                         <ImageBrush x:Name="ImgFondoBanner" ImageSource="/Assets/gears.jpg" Stretch="UniformToFill" Opacity="0.9"/>
                                     </Border.Background>
@@ -350,6 +350,7 @@
                                         </StackPanel>
                                     </Grid>
                                 </Border>
+
                                 <Grid Margin="0,0,0,20">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
@@ -473,6 +474,7 @@
                             <ColumnDefinition Width="20"/>
                             <ColumnDefinition Width="1*"/>
                         </Grid.ColumnDefinitions>
+
                         <Border Grid.Column="0" Background="#1E1E24" CornerRadius="15" Padding="20">
                             <Grid>
                                 <Grid.RowDefinitions>
@@ -480,12 +482,9 @@
                                     <RowDefinition Height="*"/>
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                                    <TextBlock Text="💬 CHAT GLOBAL" Foreground="White" FontWeight="Bold" FontSize="16"/>
-                                    <TextBlock Text=" • En línea" Foreground="#00E676" FontSize="12" VerticalAlignment="Center" Margin="5,0,0,0"/>
-                                </StackPanel>
-                                <ListBox x:Name="ListaChat" Grid.Row="1" Background="Transparent" BorderThickness="0" 
-                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled" Margin="0,0,0,15">
+                                <TextBlock Text="💬 CHAT GLOBAL" Foreground="White" FontWeight="Bold" FontSize="16" Margin="0,0,0,15"/>
+
+                                <ListBox x:Name="ListaChat" Grid.Row="1" Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Margin="0,0,0,15">
                                     <ListBox.ItemContainerStyle>
                                         <Style TargetType="ListBoxItem">
                                             <Setter Property="Focusable" Value="False"/>
@@ -518,49 +517,106 @@
                                         </DataTemplate>
                                     </ListBox.ItemTemplate>
                                 </ListBox>
+
                                 <Grid Grid.Row="2">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBox x:Name="txtMensajeChat" Height="40" Background="#121212" Foreground="White" BorderThickness="0" 
-                                             VerticalContentAlignment="Center" Padding="15,0" Tag="Escribe algo..."
-                                             KeyDown="TxtMensajeChat_KeyDown">
+                                    <TextBox x:Name="txtMensajeChat" Height="40" Background="#121212" Foreground="White" BorderThickness="0" VerticalContentAlignment="Center" Padding="15,0" KeyDown="TxtMensajeChat_KeyDown">
                                         <TextBox.Resources>
                                             <Style TargetType="Border">
                                                 <Setter Property="CornerRadius" Value="20"/>
                                             </Style>
                                         </TextBox.Resources>
                                     </TextBox>
-                                    <Button Grid.Column="1" Click="BtnEnviarChat_Click" Width="40" Height="40" Margin="10,0,0,0" 
-                                            Background="{StaticResource AccentColor}" BorderThickness="0" Cursor="Hand">
+                                    <Button Grid.Column="1" Click="BtnEnviarChat_Click" Width="40" Height="40" Margin="10,0,0,0" Background="{StaticResource AccentColor}" BorderThickness="0" Cursor="Hand">
                                         <Button.Resources>
                                             <Style TargetType="Border">
                                                 <Setter Property="CornerRadius" Value="20"/>
                                             </Style>
                                         </Button.Resources>
-                                        <Path Data="M2,21L23,12L2,3V10L17,12L2,14V21Z" Fill="White" Width="15" Height="15"/>
+                                        <TextBlock Text="➤" Foreground="White"/>
                                     </Button>
                                 </Grid>
                             </Grid>
                         </Border>
-                        <Border Grid.Column="2" Background="#121212" CornerRadius="15" BorderBrush="#333" BorderThickness="1">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="*"/>
-                                </Grid.RowDefinitions>
-                                <Border Background="{StaticResource AccentColor}" CornerRadius="15,15,0,0" Padding="15">
-                                    <StackPanel HorizontalAlignment="Center">
-                                        <TextBlock Text="🏆 TOP GAMERS" Foreground="White" FontWeight="Black" FontSize="18" HorizontalAlignment="Center"/>
-                                        <TextBlock Text="Los mejores de Nexus" Foreground="#DDD" FontSize="10" HorizontalAlignment="Center"/>
-                                    </StackPanel>
-                                </Border>
-                                <ListBox x:Name="ListaTopGamers" Grid.Row="1" Background="Transparent" BorderThickness="0" Margin="10">
+
+                        <Grid Grid.Column="2">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="1.5*"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="1*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <Border Grid.Row="0" Background="#121212" CornerRadius="15" BorderBrush="#333" BorderThickness="1" Padding="15" Margin="0,0,0,10">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Text="👥 AMIGOS" Foreground="White" FontWeight="Bold" Margin="0,0,0,10"/>
+                                    <ListBox x:Name="ListaAmigos" Grid.Row="1" Background="Transparent" BorderThickness="0">
+                                        <ListBox.ItemContainerStyle>
+                                            <Style TargetType="ListBoxItem">
+                                                <Setter Property="Focusable" Value="False"/>
+                                                <Setter Property="Margin" Value="0,0,0,5"/>
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="ListBoxItem">
+                                                            <ContentPresenter/>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </ListBox.ItemContainerStyle>
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="35"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Border Width="30" Height="30" CornerRadius="15">
+                                                        <Border.Background>
+                                                            <ImageBrush ImageSource="{Binding AvatarImagen, TargetNullValue=/Assets/logo.ico}" Stretch="UniformToFill"/>
+                                                        </Border.Background>
+                                                    </Border>
+                                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0">
+                                                        <TextBlock Text="{Binding Nombre}" Foreground="White" FontWeight="Bold" FontSize="12"/>
+                                                        <TextBlock Text="{Binding TextoEstado}" Foreground="{Binding ColorEstado}" FontSize="10"/>
+                                                    </StackPanel>
+                                                    <Ellipse Grid.Column="2" Width="8" Height="8" Fill="{Binding ColorEstado}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                                    <Button Grid.Column="3" Content="🗑" Click="BtnEliminarAmigo_Click" Tag="{Binding Id}"
+                                                            Background="Transparent" BorderThickness="0" Foreground="#666" 
+                                                            FontSize="12" Cursor="Hand" VerticalAlignment="Center"
+                                                            ToolTip="Eliminar amigo">
+                                                        <Button.Style>
+                                                            <Style TargetType="Button">
+                                                                <Style.Triggers>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter Property="Foreground" Value="#FF5252"/>
+                                                                    </Trigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Button.Style>
+                                                    </Button>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                </Grid>
+                            </Border>
+
+                            <StackPanel x:Name="PanelSolicitudes" Grid.Row="1" Margin="0,0,0,10" Visibility="Collapsed">
+                                <TextBlock Text="🔔 Solicitudes" Foreground="#AAA" FontSize="12" Margin="5,0,0,5"/>
+                                <ListBox x:Name="ListaSolicitudes" Background="Transparent" BorderThickness="0">
                                     <ListBox.ItemContainerStyle>
                                         <Style TargetType="ListBoxItem">
                                             <Setter Property="Focusable" Value="False"/>
-                                            <Setter Property="Margin" Value="0,0,0,10"/>
                                             <Setter Property="Template">
                                                 <Setter.Value>
                                                     <ControlTemplate TargetType="ListBoxItem">
@@ -572,34 +628,103 @@
                                     </ListBox.ItemContainerStyle>
                                     <ListBox.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Background="#1E1E24" CornerRadius="10" Padding="10" Height="60">
+                                            <Border Background="#333" CornerRadius="5" Padding="8" Margin="0,0,0,5">
                                                 <Grid>
                                                     <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="30"/>
-                                                        <ColumnDefinition Width="50"/>
                                                         <ColumnDefinition Width="*"/>
                                                         <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
                                                     </Grid.ColumnDefinitions>
-                                                    <TextBlock Text="{Binding Rank}" Foreground="#FFD700" FontWeight="Bold" FontSize="20" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                                    <Border Grid.Column="1" Width="40" Height="40" CornerRadius="20" Margin="5,0">
-                                                        <Border.Background>
-                                                            <ImageBrush ImageSource="{Binding AvatarImagen, TargetNullValue=/Assets/logo.ico}" Stretch="UniformToFill"/>
-                                                        </Border.Background>
-                                                    </Border>
-                                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
-                                                        <TextBlock Text="{Binding Nombre}" Foreground="White" FontWeight="Bold"/>
-                                                        <TextBlock Text="Jugador Pro" Foreground="#666" FontSize="10"/>
-                                                    </StackPanel>
-                                                    <Border Grid.Column="3" Background="#333" CornerRadius="5" Padding="5,2">
-                                                        <TextBlock Text="{Binding Nivel, StringFormat='Nivel {0}'}" Foreground="#888" FontSize="10"/>
-                                                    </Border>
+                                                    <TextBlock Text="{Binding Nombre}" Foreground="White" VerticalAlignment="Center" FontWeight="Bold"/>
+
+                                                    <Button Grid.Column="1" Content="✔" Click="BtnAceptarSolicitud_Click" Tag="{Binding IdSolicitud}" 
+                                                            Background="#00E676" Foreground="White" Width="25" Height="25"
+                                                            BorderThickness="0" Cursor="Hand" Margin="0,0,5,0">
+                                                        <Button.Resources>
+                                                            <Style TargetType="Border">
+                                                                <Setter Property="CornerRadius" Value="12"/>
+                                                            </Style>
+                                                        </Button.Resources>
+                                                    </Button>
+
+                                                    <Button Grid.Column="2" Content="✕" Click="BtnRechazarSolicitud_Click" Tag="{Binding IdSolicitud}" 
+                                                            Background="#FF5252" Foreground="White" Width="25" Height="25"
+                                                            BorderThickness="0" Cursor="Hand">
+                                                        <Button.Resources>
+                                                            <Style TargetType="Border">
+                                                                <Setter Property="CornerRadius" Value="12"/>
+                                                            </Style>
+                                                        </Button.Resources>
+                                                    </Button>
                                                 </Grid>
                                             </Border>
                                         </DataTemplate>
                                     </ListBox.ItemTemplate>
                                 </ListBox>
-                            </Grid>
-                        </Border>
+                            </StackPanel>
+
+                            <Border Grid.Row="2" Background="#211529" CornerRadius="15" BorderBrush="#651FFF" BorderThickness="1" Padding="15" Margin="0,0,0,10">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Text="🏆 TOP GAMERS" Foreground="#E040FB" FontWeight="Bold" Margin="0,0,0,10"/>
+                                    <ListBox x:Name="ListaTopGamers" Grid.Row="1" Background="Transparent" BorderThickness="0">
+                                        <ListBox.ItemContainerStyle>
+                                            <Style TargetType="ListBoxItem">
+                                                <Setter Property="Focusable" Value="False"/>
+                                                <Setter Property="Margin" Value="0,0,0,8"/>
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="ListBoxItem">
+                                                            <ContentPresenter/>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </ListBox.ItemContainerStyle>
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="20"/>
+                                                        <ColumnDefinition Width="35"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Text="{Binding Rank}" Foreground="#888" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                    <Border Grid.Column="1" Width="28" Height="28" CornerRadius="14" Margin="5,0">
+                                                        <Border.Background>
+                                                            <ImageBrush ImageSource="{Binding AvatarImagen, TargetNullValue=/Assets/logo.ico}" Stretch="UniformToFill"/>
+                                                        </Border.Background>
+                                                    </Border>
+                                                    <TextBlock Grid.Column="2" Text="{Binding Nombre}" Foreground="White" VerticalAlignment="Center" FontSize="11"/>
+                                                    <TextBlock Grid.Column="3" Text="{Binding Nivel, StringFormat='Nv. {0}'}" Foreground="#E040FB" FontWeight="Bold" FontSize="11" VerticalAlignment="Center"/>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                </Grid>
+                            </Border>
+
+                            <Border Grid.Row="3" Background="#1E1E24" CornerRadius="10" Padding="10">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox x:Name="txtAddAmigo" Style="{StaticResource NexusInputStyle}" Padding="5" FontSize="11"/>
+                                    <Button Grid.Column="1" Content="+" Click="BtnEnviarSolicitud_Click" Width="30" Background="{StaticResource AccentColor}" Foreground="White" BorderThickness="0" Margin="5,0,0,0" Cursor="Hand">
+                                        <Button.Resources>
+                                            <Style TargetType="Border">
+                                                <Setter Property="CornerRadius" Value="5"/>
+                                            </Style>
+                                        </Button.Resources>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                        </Grid>
                     </Grid>
 
                 </Grid>

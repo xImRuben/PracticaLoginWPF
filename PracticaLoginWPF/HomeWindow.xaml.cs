@@ -9,7 +9,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using Microsoft.Win32;
 using System.IO;
-using System.Windows.Threading; // Para el Timer del Carrusel
+using System.Windows.Threading;
 
 namespace PracticaLoginWPF
 {
@@ -24,7 +24,6 @@ namespace PracticaLoginWPF
         List<Juego> misJuegos = new List<Juego>();
         List<Juego> carrito = new List<Juego>();
 
-        // --- VARIABLES PARA EL CARRUSEL ---
         private DispatcherTimer bannerTimer;
         private int indiceBanner = 0;
         private List<Juego> juegosDestacados;
@@ -39,11 +38,10 @@ namespace PracticaLoginWPF
                 userRol = Sesion.UsuarioActual.Rol;
                 userId = Sesion.UsuarioActual.Id;
 
-                // ---------------------------------------------------------
-                // ¡NUEVO! CARGAMOS EL CARRITO DE LA BBDD AL ENTRAR
-                // ---------------------------------------------------------
                 carrito = db.ObtenerCarrito(userId);
                 ActualizarContadorCarrito();
+
+                db.SetOnlineStatus(userId, true);
             }
 
             ConfigurarPermisos();
@@ -65,8 +63,6 @@ namespace PracticaLoginWPF
             {
                 todosLosJuegos = db.ObtenerJuegos(false);
                 ListaJuegos.ItemsSource = todosLosJuegos;
-
-                // Iniciamos el carrusel tras cargar los juegos
                 IniciarCarrusel();
             }
             catch (Exception ex)
@@ -75,16 +71,10 @@ namespace PracticaLoginWPF
             }
         }
 
-        // ===============================================
-        // LÓGICA DEL CARRUSEL (BANNER ROTATIVO)
-        // ===============================================
         private void IniciarCarrusel()
         {
             if (todosLosJuegos == null || todosLosJuegos.Count == 0) return;
-
-            // Cogemos 5 juegos aleatorios
             juegosDestacados = todosLosJuegos.OrderBy(x => Guid.NewGuid()).Take(5).ToList();
-
             if (bannerTimer == null)
             {
                 bannerTimer = new DispatcherTimer();
@@ -98,22 +88,15 @@ namespace PracticaLoginWPF
         private void BannerTimer_Tick(object sender, EventArgs e)
         {
             if (juegosDestacados == null || juegosDestacados.Count == 0) return;
-
-            // Fade Out
             DoubleAnimation fadeOut = new DoubleAnimation { From = 1.0, To = 0.0, Duration = TimeSpan.FromSeconds(0.5) };
-
             fadeOut.Completed += (s, ev) =>
             {
                 indiceBanner++;
                 if (indiceBanner >= juegosDestacados.Count) indiceBanner = 0;
-
                 ActualizarBannerVisualmente();
-
-                // Fade In
                 DoubleAnimation fadeIn = new DoubleAnimation { From = 0.0, To = 1.0, Duration = TimeSpan.FromSeconds(0.5) };
                 if (BorderBanner != null) BorderBanner.BeginAnimation(OpacityProperty, fadeIn);
             };
-
             if (BorderBanner != null) BorderBanner.BeginAnimation(OpacityProperty, fadeOut);
         }
 
@@ -121,10 +104,8 @@ namespace PracticaLoginWPF
         {
             if (juegosDestacados.Count == 0) return;
             var juegoActual = juegosDestacados[indiceBanner];
-
             if (TxtTituloBanner != null) TxtTituloBanner.Text = juegoActual.Titulo.ToUpper();
             if (TxtDescBanner != null) TxtDescBanner.Text = juegoActual.Genero + " | " + juegoActual.Precio + " €";
-
             if (ImgFondoBanner != null)
             {
                 if (juegoActual.CaratulaImagen != null) ImgFondoBanner.ImageSource = juegoActual.CaratulaImagen;
@@ -132,16 +113,11 @@ namespace PracticaLoginWPF
             }
         }
 
-        // ===============================================
-
         private void CargarBiblioteca()
         {
             try { misJuegos = db.ObtenerBiblioteca(userId); } catch { }
         }
 
-        // ===============================================
-        // CARRITO Y PAGOS (CON PERSISTENCIA)
-        // ===============================================
         private void ActualizarContadorCarrito()
         {
             txtCountCarrito.Text = $"({carrito.Count})";
@@ -151,11 +127,9 @@ namespace PracticaLoginWPF
         {
             ListaCarrito.ItemsSource = null;
             ListaCarrito.ItemsSource = carrito;
-
             decimal subtotal = carrito.Sum(j => j.Precio);
             decimal impuestos = subtotal * 0.21m;
             decimal total = subtotal + impuestos;
-
             txtSubtotal.Text = $"{subtotal:0.00}€";
             txtImpuestos.Text = $"{impuestos:0.00}€";
             txtTotal.Text = $"{total:0.00}€";
@@ -165,13 +139,8 @@ namespace PracticaLoginWPF
         {
             Button btn = sender as Button;
             Juego j = btn.Tag as Juego;
-
-            // Borrar de RAM
             carrito.Remove(j);
-
-            // ¡NUEVO! BORRAR DE BBDD
             db.EliminarDelCarrito(userId, j.Id);
-
             CargarCarrito();
             ActualizarContadorCarrito();
         }
@@ -179,7 +148,6 @@ namespace PracticaLoginWPF
         private void BtnPagarAhora_Click(object sender, RoutedEventArgs e)
         {
             if (carrito.Count == 0) return;
-
             decimal subtotal = carrito.Sum(j => j.Precio);
             decimal totalAPagar = subtotal + (subtotal * 0.21m);
 
@@ -202,13 +170,9 @@ namespace PracticaLoginWPF
                 {
                     Sesion.UsuarioActual.Saldo -= totalAPagar;
                     db.ActualizarSaldo(userId, Sesion.UsuarioActual.Saldo);
-
                     NexusMessageBox.Show($"¡Compra realizada!\nTe quedan: {Sesion.UsuarioActual.Saldo:0.00} €");
-
-                    // ¡NUEVO! LIMPIAR RAM Y BBDD
                     carrito.Clear();
                     db.VaciarCarrito(userId);
-
                     ActualizarContadorCarrito();
                     CargarCarrito();
                     ConstruirVistaBiblioteca();
@@ -221,14 +185,10 @@ namespace PracticaLoginWPF
             }
         }
 
-        // ===============================================
-        // DETALLES Y AÑADIR AL CARRITO
-        // ===============================================
         private void Juego_Click(object sender, MouseButtonEventArgs e)
         {
             var gridJuego = sender as Grid;
             juegoSeleccionado = gridJuego.DataContext as Juego;
-
             if (juegoSeleccionado != null)
             {
                 txtTitulo.Text = juegoSeleccionado.Titulo;
@@ -240,13 +200,9 @@ namespace PracticaLoginWPF
                 else BrushDetalle.ImageSource = new BitmapImage(new Uri("pack://application:,,,/Assets/logo.ico"));
 
                 bool yaLoTengo = misJuegos.Any(j => j.Id == juegoSeleccionado.Id);
-                // Comprobamos por ID para evitar duplicados de objetos
                 bool enCarrito = carrito.Any(j => j.Id == juegoSeleccionado.Id);
 
-                if (yaLoTengo)
-                {
-                    ConfigurarBotonJugar();
-                }
+                if (yaLoTengo) ConfigurarBotonJugar();
                 else if (enCarrito)
                 {
                     btnAccion.Content = "✓ EN EL CARRITO";
@@ -259,7 +215,6 @@ namespace PracticaLoginWPF
                     btnAccion.IsEnabled = true;
                     btnAccion.Background = (SolidColorBrush)Application.Current.Resources["AccentColor"];
                 }
-
                 CambiarPantalla(GridDetails);
             }
         }
@@ -274,26 +229,18 @@ namespace PracticaLoginWPF
         private void BtnAccion_Click(object sender, RoutedEventArgs e)
         {
             if (btnAccion.Content.ToString().Contains("✓")) return;
-
             if (btnAccion.Content.ToString().Contains("JUGAR"))
             {
                 GameLauncherWindow launcher = new GameLauncherWindow(juegoSeleccionado);
                 launcher.ShowDialog();
                 return;
             }
-
-            // AÑADIR AL CARRITO
             if (!carrito.Any(j => j.Id == juegoSeleccionado.Id))
             {
-                // 1. Añadir a RAM
                 carrito.Add(juegoSeleccionado);
-
-                // 2. ¡NUEVO! GUARDAR EN BBDD
                 db.AgregarAlCarrito(userId, juegoSeleccionado.Id);
-
                 ActualizarContadorCarrito();
                 NexusMessageBox.Show($"¡{juegoSeleccionado.Titulo} añadido!");
-
                 btnAccion.Content = "✓ EN EL CARRITO";
                 btnAccion.IsEnabled = true;
                 btnAccion.Background = new SolidColorBrush(Color.FromRgb(69, 39, 160));
@@ -302,10 +249,6 @@ namespace PracticaLoginWPF
 
         private void BtnVolver_Click(object sender, RoutedEventArgs e) => CambiarPantalla(GridLibrary);
 
-
-        // ===============================================
-        // PERFIL
-        // ===============================================
         private void CargarPerfil()
         {
             lblPerfilUser.Text = Sesion.UsuarioActual.Nombre;
@@ -314,7 +257,6 @@ namespace PracticaLoginWPF
             txtEmailPerfil.Text = Sesion.UsuarioActual.Email;
             txtPassActual.Text = "";
             txtPassNueva.Text = "";
-
             if (Sesion.UsuarioActual.AvatarImage != null)
                 imgPerfilUser.ImageSource = Sesion.UsuarioActual.AvatarImage;
             else
@@ -363,10 +305,8 @@ namespace PracticaLoginWPF
                 NexusMessageBox.Show("Confirma tu contraseña actual para cambiarla.");
                 return;
             }
-
             string passwordFinal = string.IsNullOrEmpty(txtPassNueva.Text) ? Sesion.UsuarioActual.Password : txtPassNueva.Text;
             Usuario u = new Usuario { Id = userId, Nombre = Sesion.UsuarioActual.Nombre, Email = txtEmailPerfil.Text, Password = passwordFinal };
-
             if (db.EditarPerfilUsuario(u))
             {
                 Sesion.UsuarioActual.Email = u.Email;
@@ -375,24 +315,91 @@ namespace PracticaLoginWPF
                 CargarPerfil();
                 txtPassActual.Text = ""; txtPassNueva.Text = "";
             }
-            else
-            {
-                NexusMessageBox.Show("Error al guardar.");
-            }
+            else { NexusMessageBox.Show("Error al guardar."); }
         }
 
         private void BtnCerrarPerfil_Click(object sender, RoutedEventArgs e) => CambiarPantalla(GridLibrary);
 
         // ===============================================
-        // COMUNIDAD Y NAVEGACIÓN
+        // COMUNIDAD, AMIGOS Y RANKING
         // ===============================================
         private void CargarComunidad()
         {
             var mensajes = db.ObtenerChat();
             ListaChat.ItemsSource = mensajes;
             if (ListaChat.Items.Count > 0) ListaChat.ScrollIntoView(ListaChat.Items[ListaChat.Items.Count - 1]);
+
+            // Cargar Ranking
             var top = db.ObtenerTopGamers();
             ListaTopGamers.ItemsSource = top;
+
+            // Cargar Amigos y Solicitudes
+            CargarAmigos();
+        }
+
+        private void CargarAmigos()
+        {
+            var amigos = db.ObtenerListaAmigos(userId);
+            ListaAmigos.ItemsSource = amigos;
+
+            var pendientes = db.ObtenerSolicitudesPendientes(userId);
+            if (pendientes.Count > 0)
+            {
+                PanelSolicitudes.Visibility = Visibility.Visible;
+                ListaSolicitudes.ItemsSource = pendientes;
+            }
+            else
+            {
+                PanelSolicitudes.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void BtnEnviarSolicitud_Click(object sender, RoutedEventArgs e)
+        {
+            string nombre = txtAddAmigo.Text.Trim();
+            if (string.IsNullOrEmpty(nombre)) return;
+            string resultado = db.EnviarSolicitudAmistad(userId, nombre);
+            NexusMessageBox.Show(resultado);
+            txtAddAmigo.Text = "";
+        }
+
+        private void BtnAceptarSolicitud_Click(object sender, RoutedEventArgs e)
+        {
+            Button btn = sender as Button;
+            if (btn.Tag != null)
+            {
+                int idSolicitud = (int)btn.Tag;
+                db.AceptarSolicitud(idSolicitud);
+                NexusMessageBox.Show("¡Ahora sois amigos!");
+                CargarAmigos();
+            }
+        }
+
+        private void BtnRechazarSolicitud_Click(object sender, RoutedEventArgs e)
+        {
+            Button btn = sender as Button;
+            if (btn.Tag != null)
+            {
+                int idSolicitud = (int)btn.Tag;
+                db.RechazarSolicitud(idSolicitud);
+                NexusMessageBox.Show("Solicitud eliminada.");
+                CargarAmigos();
+            }
+        }
+
+        private void BtnEliminarAmigo_Click(object sender, RoutedEventArgs e)
+        {
+            Button btn = sender as Button;
+            if (btn.Tag != null)
+            {
+                int idAmigo = (int)btn.Tag; // Aquí el Tag es el ID del Usuario Amigo
+
+                if (MessageBox.Show("¿Seguro que quieres eliminar a este amigo?", "Eliminar", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+                {
+                    db.EliminarAmigo(userId, idAmigo);
+                    CargarAmigos();
+                }
+            }
         }
 
         private void BtnEnviarChat_Click(object sender, RoutedEventArgs e) => EnviarMensajeChat();
@@ -409,7 +416,6 @@ namespace PracticaLoginWPF
             var btn = sender as RadioButton;
             if (btn == null) return;
             string tag = btn.Tag.ToString();
-
             if (tag == "Lib") CambiarPantalla(GridLibrary);
             if (tag == "MyGames") { ConstruirVistaBiblioteca(); CambiarPantalla(GridMyGames); }
             if (tag == "Comm") { CargarComunidad(); CambiarPantalla(GridCommunity); }
@@ -487,23 +493,23 @@ namespace PracticaLoginWPF
         private void Window_MouseDown(object sender, MouseButtonEventArgs e) { if (e.ChangedButton == MouseButton.Left) { if (e.ClickCount == 2) BtnMaximizar_Click(sender, e); else if (this.WindowState == WindowState.Normal) DragMove(); } }
         private void BtnMinimizar_Click(object sender, RoutedEventArgs e) => this.WindowState = WindowState.Minimized;
         private void BtnMaximizar_Click(object sender, RoutedEventArgs e) { if (this.WindowState == WindowState.Normal) { this.MaxHeight = SystemParameters.WorkArea.Height + 14; this.MaxWidth = SystemParameters.WorkArea.Width + 14; this.WindowState = WindowState.Maximized; } else { this.MaxHeight = double.PositiveInfinity; this.MaxWidth = double.PositiveInfinity; this.WindowState = WindowState.Normal; } }
-        private void BtnCerrarApp_Click(object sender, RoutedEventArgs e) => Application.Current.Shutdown();
-        private void BtnCerrarSesion_Click(object sender, RoutedEventArgs e) { Sesion.Cerrar(); new MainWindow().Show(); this.Close(); }
+
+        private void BtnCerrarApp_Click(object sender, RoutedEventArgs e)
+        {
+            db.SetOnlineStatus(userId, false);
+            Application.Current.Shutdown();
+        }
+
+        private void BtnCerrarSesion_Click(object sender, RoutedEventArgs e)
+        {
+            db.SetOnlineStatus(userId, false);
+            Sesion.Cerrar();
+            new MainWindow().Show();
+            this.Close();
+        }
+
         private void BtnAdmin_Click(object sender, RoutedEventArgs e) { this.Hide(); new AdminWindow().ShowDialog(); this.Show(); CargarCatalogo(); }
-
-        private void BtnAyuda_Click(object sender, RoutedEventArgs e)
-        {
-            HelpWindow ayuda = new HelpWindow();
-            ayuda.ShowDialog();
-        }
-
-        private void HomeWindow_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.Key == Key.F1)
-            {
-                HelpWindow ayuda = new HelpWindow();
-                ayuda.ShowDialog();
-            }
-        }
+        private void BtnAyuda_Click(object sender, RoutedEventArgs e) { HelpWindow ayuda = new HelpWindow(); ayuda.ShowDialog(); }
+        private void HomeWindow_KeyDown(object sender, KeyEventArgs e) { if (e.Key == Key.F1) { HelpWindow ayuda = new HelpWindow(); ayuda.ShowDialog(); } }
     }
 }
