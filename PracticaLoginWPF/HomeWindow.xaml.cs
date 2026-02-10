@@ -9,6 +9,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using Microsoft.Win32;
 using System.IO;
+using System.Windows.Threading; // Para el Timer del Carrusel
 
 namespace PracticaLoginWPF
 {
@@ -23,6 +24,11 @@ namespace PracticaLoginWPF
         List<Juego> misJuegos = new List<Juego>();
         List<Juego> carrito = new List<Juego>();
 
+        // --- VARIABLES PARA EL CARRUSEL ---
+        private DispatcherTimer bannerTimer;
+        private int indiceBanner = 0;
+        private List<Juego> juegosDestacados;
+
         public HomeWindow()
         {
             InitializeComponent();
@@ -32,6 +38,12 @@ namespace PracticaLoginWPF
             {
                 userRol = Sesion.UsuarioActual.Rol;
                 userId = Sesion.UsuarioActual.Id;
+
+                // ---------------------------------------------------------
+                // ¡NUEVO! CARGAMOS EL CARRITO DE LA BBDD AL ENTRAR
+                // ---------------------------------------------------------
+                carrito = db.ObtenerCarrito(userId);
+                ActualizarContadorCarrito();
             }
 
             ConfigurarPermisos();
@@ -53,6 +65,9 @@ namespace PracticaLoginWPF
             {
                 todosLosJuegos = db.ObtenerJuegos(false);
                 ListaJuegos.ItemsSource = todosLosJuegos;
+
+                // Iniciamos el carrusel tras cargar los juegos
+                IniciarCarrusel();
             }
             catch (Exception ex)
             {
@@ -60,13 +75,72 @@ namespace PracticaLoginWPF
             }
         }
 
+        // ===============================================
+        // LÓGICA DEL CARRUSEL (BANNER ROTATIVO)
+        // ===============================================
+        private void IniciarCarrusel()
+        {
+            if (todosLosJuegos == null || todosLosJuegos.Count == 0) return;
+
+            // Cogemos 5 juegos aleatorios
+            juegosDestacados = todosLosJuegos.OrderBy(x => Guid.NewGuid()).Take(5).ToList();
+
+            if (bannerTimer == null)
+            {
+                bannerTimer = new DispatcherTimer();
+                bannerTimer.Interval = TimeSpan.FromSeconds(5);
+                bannerTimer.Tick += BannerTimer_Tick;
+                bannerTimer.Start();
+            }
+            ActualizarBannerVisualmente();
+        }
+
+        private void BannerTimer_Tick(object sender, EventArgs e)
+        {
+            if (juegosDestacados == null || juegosDestacados.Count == 0) return;
+
+            // Fade Out
+            DoubleAnimation fadeOut = new DoubleAnimation { From = 1.0, To = 0.0, Duration = TimeSpan.FromSeconds(0.5) };
+
+            fadeOut.Completed += (s, ev) =>
+            {
+                indiceBanner++;
+                if (indiceBanner >= juegosDestacados.Count) indiceBanner = 0;
+
+                ActualizarBannerVisualmente();
+
+                // Fade In
+                DoubleAnimation fadeIn = new DoubleAnimation { From = 0.0, To = 1.0, Duration = TimeSpan.FromSeconds(0.5) };
+                if (BorderBanner != null) BorderBanner.BeginAnimation(OpacityProperty, fadeIn);
+            };
+
+            if (BorderBanner != null) BorderBanner.BeginAnimation(OpacityProperty, fadeOut);
+        }
+
+        private void ActualizarBannerVisualmente()
+        {
+            if (juegosDestacados.Count == 0) return;
+            var juegoActual = juegosDestacados[indiceBanner];
+
+            if (TxtTituloBanner != null) TxtTituloBanner.Text = juegoActual.Titulo.ToUpper();
+            if (TxtDescBanner != null) TxtDescBanner.Text = juegoActual.Genero + " | " + juegoActual.Precio + " €";
+
+            if (ImgFondoBanner != null)
+            {
+                if (juegoActual.CaratulaImagen != null) ImgFondoBanner.ImageSource = juegoActual.CaratulaImagen;
+                else try { ImgFondoBanner.ImageSource = new BitmapImage(new Uri("pack://application:,,,/Assets/logo.ico")); } catch { }
+            }
+        }
+
+        // ===============================================
+
         private void CargarBiblioteca()
         {
             try { misJuegos = db.ObtenerBiblioteca(userId); } catch { }
         }
 
         // ===============================================
-        // CARRITO Y PAGOS
+        // CARRITO Y PAGOS (CON PERSISTENCIA)
         // ===============================================
         private void ActualizarContadorCarrito()
         {
@@ -91,7 +165,13 @@ namespace PracticaLoginWPF
         {
             Button btn = sender as Button;
             Juego j = btn.Tag as Juego;
+
+            // Borrar de RAM
             carrito.Remove(j);
+
+            // ¡NUEVO! BORRAR DE BBDD
+            db.EliminarDelCarrito(userId, j.Id);
+
             CargarCarrito();
             ActualizarContadorCarrito();
         }
@@ -103,12 +183,9 @@ namespace PracticaLoginWPF
             decimal subtotal = carrito.Sum(j => j.Precio);
             decimal totalAPagar = subtotal + (subtotal * 0.21m);
 
-            // VERIFICAR SALDO
             if (Sesion.UsuarioActual.Saldo < totalAPagar)
             {
-                NexusMessageBox.Show($"¡SALDO INSUFICIENTE!\n" +
-                                     $"Cartera: {Sesion.UsuarioActual.Saldo:0.00} €\n" +
-                                     $"Necesitas: {totalAPagar:0.00} €");
+                NexusMessageBox.Show($"¡SALDO INSUFICIENTE!\nCartera: {Sesion.UsuarioActual.Saldo:0.00} €\nNecesitas: {totalAPagar:0.00} €");
                 return;
             }
 
@@ -123,13 +200,15 @@ namespace PracticaLoginWPF
 
                 if (!error)
                 {
-                    // RESTAR DINERO
                     Sesion.UsuarioActual.Saldo -= totalAPagar;
                     db.ActualizarSaldo(userId, Sesion.UsuarioActual.Saldo);
 
                     NexusMessageBox.Show($"¡Compra realizada!\nTe quedan: {Sesion.UsuarioActual.Saldo:0.00} €");
 
+                    // ¡NUEVO! LIMPIAR RAM Y BBDD
                     carrito.Clear();
+                    db.VaciarCarrito(userId);
+
                     ActualizarContadorCarrito();
                     CargarCarrito();
                     ConstruirVistaBiblioteca();
@@ -143,7 +222,7 @@ namespace PracticaLoginWPF
         }
 
         // ===============================================
-        // DETALLES
+        // DETALLES Y AÑADIR AL CARRITO
         // ===============================================
         private void Juego_Click(object sender, MouseButtonEventArgs e)
         {
@@ -161,6 +240,7 @@ namespace PracticaLoginWPF
                 else BrushDetalle.ImageSource = new BitmapImage(new Uri("pack://application:,,,/Assets/logo.ico"));
 
                 bool yaLoTengo = misJuegos.Any(j => j.Id == juegoSeleccionado.Id);
+                // Comprobamos por ID para evitar duplicados de objetos
                 bool enCarrito = carrito.Any(j => j.Id == juegoSeleccionado.Id);
 
                 if (yaLoTengo)
@@ -202,11 +282,16 @@ namespace PracticaLoginWPF
                 return;
             }
 
-            if (!carrito.Contains(juegoSeleccionado))
+            // AÑADIR AL CARRITO
+            if (!carrito.Any(j => j.Id == juegoSeleccionado.Id))
             {
+                // 1. Añadir a RAM
                 carrito.Add(juegoSeleccionado);
-                ActualizarContadorCarrito();
 
+                // 2. ¡NUEVO! GUARDAR EN BBDD
+                db.AgregarAlCarrito(userId, juegoSeleccionado.Id);
+
+                ActualizarContadorCarrito();
                 NexusMessageBox.Show($"¡{juegoSeleccionado.Titulo} añadido!");
 
                 btnAccion.Content = "✓ EN EL CARRITO";
@@ -219,7 +304,7 @@ namespace PracticaLoginWPF
 
 
         // ===============================================
-        // PERFIL (CON RECARGA DE 100€)
+        // PERFIL
         // ===============================================
         private void CargarPerfil()
         {
@@ -236,10 +321,9 @@ namespace PracticaLoginWPF
                 imgPerfilUser.ImageSource = new BitmapImage(new Uri("pack://application:,,,/Assets/logo.ico"));
         }
 
-        // AQUÍ ESTÁ EL CAMBIO A 100€
         private void BtnRecargar_Click_Simulado(object sender, RoutedEventArgs e)
         {
-            Sesion.UsuarioActual.Saldo += 100; // Sumamos 100
+            Sesion.UsuarioActual.Saldo += 100;
             db.ActualizarSaldo(userId, Sesion.UsuarioActual.Saldo);
             CargarPerfil();
             NexusMessageBox.Show("¡Has recargado 100€ a tu cuenta!");
@@ -300,7 +384,7 @@ namespace PracticaLoginWPF
         private void BtnCerrarPerfil_Click(object sender, RoutedEventArgs e) => CambiarPantalla(GridLibrary);
 
         // ===============================================
-        // COMUNIDAD, NAVEGACIÓN Y OTROS
+        // COMUNIDAD Y NAVEGACIÓN
         // ===============================================
         private void CargarComunidad()
         {
@@ -407,7 +491,6 @@ namespace PracticaLoginWPF
         private void BtnCerrarSesion_Click(object sender, RoutedEventArgs e) { Sesion.Cerrar(); new MainWindow().Show(); this.Close(); }
         private void BtnAdmin_Click(object sender, RoutedEventArgs e) { this.Hide(); new AdminWindow().ShowDialog(); this.Show(); CargarCatalogo(); }
 
-        // --- ESTE ES EL MÉTODO QUE FALTABA ---
         private void BtnAyuda_Click(object sender, RoutedEventArgs e)
         {
             HelpWindow ayuda = new HelpWindow();

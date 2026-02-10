@@ -39,7 +39,6 @@ namespace PracticaLoginWPF
                             byte[] avatarBytes = null;
                             if (reader["avatar"] != DBNull.Value) avatarBytes = (byte[])reader["avatar"];
 
-                            // NUEVO: LEER SALDO
                             decimal saldo = 0;
                             if (reader["saldo"] != DBNull.Value) saldo = reader.GetDecimal("saldo");
 
@@ -53,7 +52,7 @@ namespace PracticaLoginWPF
                                 Email = reader["email"].ToString(),
                                 Estado = reader["estado"].ToString(),
                                 Avatar = avatarBytes,
-                                Saldo = saldo // ASIGNAR SALDO
+                                Saldo = saldo
                             };
                         }
                     }
@@ -63,7 +62,6 @@ namespace PracticaLoginWPF
             return null;
         }
 
-        // NUEVO MÉTODO: ACTUALIZAR SALDO EN DB
         public bool ActualizarSaldo(int idUsuario, decimal nuevoSaldo)
         {
             using (MySqlConnection conn = GetConnection())
@@ -83,7 +81,6 @@ namespace PracticaLoginWPF
 
         public bool RegistrarUsuario(string usuario, string password)
         {
-            // El usuario nuevo empieza con 100€ de regalo (o 0 si prefieres cambiarlo en CrearUsuarioAdmin)
             Usuario u = new Usuario { Nombre = usuario, Password = password, Rol = "user", Email = "", Estado = "activo", Saldo = 100 };
             return CrearUsuarioAdmin(u);
         }
@@ -144,7 +141,6 @@ namespace PracticaLoginWPF
                 {
                     conn.Open();
                     if (ExisteUsuario(u.Nombre)) return false;
-                    // Insertamos también el saldo por defecto (si u.Saldo es 0, pondrá 0, si le pusiste 100, pondrá 100)
                     string query = "INSERT INTO usuarios (nombre, password, rol, email, estado, saldo) VALUES (@n, @p, @r, @e, @s, @dinero)";
                     MySqlCommand cmd = new MySqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@n", u.Nombre);
@@ -152,7 +148,7 @@ namespace PracticaLoginWPF
                     cmd.Parameters.AddWithValue("@r", u.Rol);
                     cmd.Parameters.AddWithValue("@e", u.Email);
                     cmd.Parameters.AddWithValue("@s", u.Estado);
-                    cmd.Parameters.AddWithValue("@dinero", u.Saldo); // Guardar saldo inicial
+                    cmd.Parameters.AddWithValue("@dinero", u.Saldo);
                     cmd.ExecuteNonQuery();
                     return true;
                 }
@@ -334,7 +330,6 @@ namespace PracticaLoginWPF
                             byte[] imgBytes = null;
                             if (reader["caratula"] != DBNull.Value) imgBytes = (byte[])reader["caratula"];
 
-                            // NUEVO: LEER VALORACIÓN
                             int val = 5;
                             if (reader["valoracion"] != DBNull.Value) val = reader.GetInt32("valoracion");
 
@@ -347,7 +342,7 @@ namespace PracticaLoginWPF
                                 Descripcion = reader.GetString("descripcion"),
                                 Visible = reader.GetBoolean("visible"),
                                 Caratula = imgBytes,
-                                Valoracion = val // ASIGNAR ESTRELLAS
+                                Valoracion = val
                             });
                         }
                     }
@@ -364,7 +359,6 @@ namespace PracticaLoginWPF
                 try
                 {
                     conn.Open();
-                    // Añadimos valoración por defecto (5)
                     string query = "INSERT INTO juegos (titulo, genero, precio, descripcion, visible, caratula, valoracion) VALUES (@t, @g, @p, @d, @v, @img, 5)";
                     MySqlCommand cmd = new MySqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@t", j.Titulo);
@@ -484,7 +478,6 @@ namespace PracticaLoginWPF
                             byte[] imgBytes = null;
                             if (reader["caratula"] != DBNull.Value) imgBytes = (byte[])reader["caratula"];
 
-                            // Al obtener la biblioteca, también leemos la valoración
                             int val = 5;
                             if (reader["valoracion"] != DBNull.Value) val = reader.GetInt32("valoracion");
 
@@ -678,6 +671,103 @@ namespace PracticaLoginWPF
                 catch { }
             }
             return lista;
+        }
+
+        // =============================================================
+        // 5. GESTIÓN DEL CARRITO (PERSISTENCIA BBDD) - NUEVO
+        // =============================================================
+
+        public List<Juego> ObtenerCarrito(int idUsuario)
+        {
+            List<Juego> lista = new List<Juego>();
+            using (MySqlConnection conn = GetConnection())
+            {
+                try
+                {
+                    conn.Open();
+                    // Unimos juegos y carrito
+                    string query = "SELECT j.* FROM juegos j INNER JOIN carrito c ON j.id = c.id_juego WHERE c.id_usuario = @u";
+                    MySqlCommand cmd = new MySqlCommand(query, conn);
+                    cmd.Parameters.AddWithValue("@u", idUsuario);
+
+                    using (MySqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            byte[] imgBytes = null;
+                            if (reader["caratula"] != DBNull.Value) imgBytes = (byte[])reader["caratula"];
+
+                            int val = 5;
+                            if (reader["valoracion"] != DBNull.Value) val = reader.GetInt32("valoracion");
+
+                            lista.Add(new Juego
+                            {
+                                Id = reader.GetInt32("id"),
+                                Titulo = reader.GetString("titulo"),
+                                Genero = reader.GetString("genero"),
+                                Precio = reader.GetDecimal("precio"),
+                                Descripcion = reader.GetString("descripcion"),
+                                Visible = reader.GetBoolean("visible"),
+                                Caratula = imgBytes,
+                                Valoracion = val
+                            });
+                        }
+                    }
+                }
+                catch (Exception ex) { MessageBox.Show("Error al recuperar carrito: " + ex.Message); }
+            }
+            return lista;
+        }
+
+        public void AgregarAlCarrito(int idUsuario, int idJuego)
+        {
+            using (MySqlConnection conn = GetConnection())
+            {
+                try
+                {
+                    conn.Open();
+                    string query = "INSERT INTO carrito (id_usuario, id_juego) VALUES (@u, @j)";
+                    MySqlCommand cmd = new MySqlCommand(query, conn);
+                    cmd.Parameters.AddWithValue("@u", idUsuario);
+                    cmd.Parameters.AddWithValue("@j", idJuego);
+                    cmd.ExecuteNonQuery();
+                }
+                catch { }
+            }
+        }
+
+        public void EliminarDelCarrito(int idUsuario, int idJuego)
+        {
+            using (MySqlConnection conn = GetConnection())
+            {
+                try
+                {
+                    conn.Open();
+                    // LIMIT 1 para asegurar que solo borra una instancia si hubiera duplicados
+                    string query = "DELETE FROM carrito WHERE id_usuario = @u AND id_juego = @j LIMIT 1";
+                    MySqlCommand cmd = new MySqlCommand(query, conn);
+                    cmd.Parameters.AddWithValue("@u", idUsuario);
+                    cmd.Parameters.AddWithValue("@j", idJuego);
+                    cmd.ExecuteNonQuery();
+                }
+                catch { }
+            }
+        }
+
+        public void VaciarCarrito(int idUsuario)
+        {
+            using (MySqlConnection conn = GetConnection())
+            {
+                try
+                {
+                    conn.Open();
+                    string query = "DELETE FROM carrito WHERE id_usuario = @u";
+                    MySqlCommand cmd = new MySqlCommand(query, conn);
+                    cmd.Parameters.AddWithValue("@u", idUsuario);
+                    cmd.ExecuteNonQuery();
+                }
+                catch { }
+            }
         }
     }
 }

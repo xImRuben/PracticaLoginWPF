@@ -324,9 +324,10 @@
                     <Grid x:Name="GridLibrary" Visibility="Visible">
                         <ScrollViewer x:Name="MainScroll" VerticalScrollBarVisibility="Hidden" Margin="30,10,30,30">
                             <StackPanel>
-                                <Border Height="380" CornerRadius="12" Margin="0,0,0,40">
+
+                                <Border x:Name="BorderBanner" Height="380" CornerRadius="12" Margin="0,0,0,40">
                                     <Border.Background>
-                                        <ImageBrush ImageSource="/Assets/gears.jpg" Stretch="UniformToFill" Opacity="0.9"/>
+                                        <ImageBrush x:Name="ImgFondoBanner" ImageSource="/Assets/gears.jpg" Stretch="UniformToFill" Opacity="0.9"/>
                                     </Border.Background>
                                     <Grid>
                                         <Border CornerRadius="12" Background="#55000000"/>
@@ -334,8 +335,18 @@
                                             <Border Background="{StaticResource AccentColor}" HorizontalAlignment="Left" CornerRadius="4" Padding="8,4" Margin="0,0,0,15">
                                                 <TextBlock Text="DESTACADO" Foreground="White" FontSize="10" FontWeight="Bold"/>
                                             </Border>
-                                            <TextBlock Text="BIENVENIDO A NEXUS" Foreground="White" FontSize="50" FontWeight="Black"/>
-                                            <TextBlock Text="Explora el catálogo completo a continuación" Foreground="#DDD" FontSize="16" Margin="0,5,0,0"/>
+
+                                            <TextBlock x:Name="TxtTituloBanner" Text="BIENVENIDO A NEXUS" Foreground="White" FontSize="50" FontWeight="Black">
+                                                <TextBlock.Effect>
+                                                    <DropShadowEffect ShadowDepth="2" BlurRadius="5" Opacity="0.8"/>
+                                                </TextBlock.Effect>
+                                            </TextBlock>
+
+                                            <TextBlock x:Name="TxtDescBanner" Text="Explora el catálogo completo a continuación" Foreground="#DDD" FontSize="16" Margin="0,5,0,0">
+                                                <TextBlock.Effect>
+                                                    <DropShadowEffect ShadowDepth="1" BlurRadius="3" Opacity="0.8"/>
+                                                </TextBlock.Effect>
+                                            </TextBlock>
                                         </StackPanel>
                                     </Grid>
                                 </Border>
